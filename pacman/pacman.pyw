@@ -73,7 +73,6 @@ ghostcolor[5] = (255, 255, 255, 255)  # white, flashing ghost
 # ___/  class definitions  \_______________________________________________
 
 class game():
-
     def defaulthiscorelist(self):
         return [(100000, "David"), (80000, "Andy"), (60000, "Count Pacula"), (40000, "Cleopacra"),
                 (20000, "Brett Favre"), (10000, "Sergei Pachmaninoff")]
@@ -113,11 +112,11 @@ class game():
         try:
             import wx
         except:
-            print
+            print()
             "Pacman Error: No module wx. Can not ask the user his name!"
-            print
+            print()
             "     :(       Download wx from http://www.wxpython.org/"
-            print
+            print()
             "     :(       To avoid seeing this error again, set NO_WX in file pacman.pyw."
             return USER_NAME
         app = wx.App(None)
@@ -207,7 +206,6 @@ class game():
         thisLevel.LoadLevel(thisGame.GetLevelNum())
 
     def AddToScore(self, amount):
-
         extraLifeSet = [25000, 50000, 100000, 150000]
 
         for specialScore in extraLifeSet:
@@ -232,7 +230,8 @@ class game():
 
         self.DrawNumber(self.levelNum, (0, self.screenSize[1] - 12))
 
-    def DrawNumber(self, number, (x, y)):
+    def DrawNumber(self, number, x_y):
+        (x, y) = x_y
         strNumber = str(number)
 
         for i in range(0, len(str(number)), 1):
@@ -256,7 +255,8 @@ class game():
 
         thisGame.MoveScreen((possibleScreenX, possibleScreenY))
 
-    def MoveScreen(self, (newX, newY)):
+    def MoveScreen(self, newX_newY):
+        (newX, newY) = newX_newY
         self.screenPixelPos = (newX, newY)
         self.screenNearestTilePos = (
         int(newY / 16), int(newX / 16))  # nearest-tile position of the screen from the UL corner
@@ -285,7 +285,6 @@ class game():
 
 
 class node():
-
     def __init__(self):
         self.g = -1  # movement cost to move from previous node to this one (usually +10)
         self.h = -1  # estimated movement cost to move from this node to the ending node (remaining horizontal and vertical steps * 10)
@@ -297,7 +296,6 @@ class node():
 
 
 class path_finder():
-
     def __init__(self):
         # map is a 1-DIMENSIONAL array.
         # use the Unfold( (row, col) ) function to convert a 2D coordinate pair
@@ -322,7 +320,8 @@ class path_finder():
         # used in algorithm (adjacent neighbors path finder is allowed to consider)
         self.neighborSet = [(0, -1), (0, 1), (-1, 0), (1, 0)]
 
-    def ResizeMap(self, (numRows, numCols)):
+    def ResizeMap(self, numRows_newCols):
+        (numRows, numCols) = numRows_newCols
         self.map = {}
         self.size = (numRows, numCols)
 
@@ -333,9 +332,7 @@ class path_finder():
                 self.SetType((row, col), 0)
 
     def CleanUpTemp(self):
-
         # this resets variables needed for a search (but preserves the same map / maze)
-
         self.pathChainRev = ""
         self.pathChain = ""
         self.current = (-1, -1)
@@ -343,9 +340,7 @@ class path_finder():
         self.closedList = []
 
     def FindPath(self, startPos, endPos):
-
         self.CleanUpTemp()
-
         # (row, col) tuples
         self.start = startPos
         self.end = endPos
@@ -417,53 +412,68 @@ class path_finder():
 
         return self.pathChain
 
-    def Unfold(self, (row, col)):
+    def Unfold(self, row_col):
         # this function converts a 2D array coordinate pair (row, col)
         # to a 1D-array index, for the object's 1D map array.
+        (row, col) = row_col
         return (row * self.size[1]) + col
 
-    def Set(self, (row, col), newNode):
+    def Set(self, row_col, newNode):
         # sets the value of a particular map cell (usually refers to a node object)
+        (row, col) = row_col
         self.map[self.Unfold((row, col))] = newNode
 
-    def GetType(self, (row, col)):
+    def GetType(self, row_col):
+        (row, col) = row_col
         return self.map[self.Unfold((row, col))].type
 
-    def SetType(self, (row, col), newValue):
+    def SetType(self, row_col, newValue):
+        (row, col) = row_col
         self.map[self.Unfold((row, col))].type = newValue
 
-    def GetF(self, (row, col)):
+    def GetF(self, row_col):
+        (row, col) = row_col
         return self.map[self.Unfold((row, col))].f
 
-    def GetG(self, (row, col)):
+    def GetG(self, row_col):
+        (row, col) = row_col
         return self.map[self.Unfold((row, col))].g
 
-    def GetH(self, (row, col)):
+    def GetH(self, row_col):
+        (row, col) = row_col
         return self.map[self.Unfold((row, col))].h
 
-    def SetG(self, (row, col), newValue):
+    def SetG(self, row_col, newValue):
+        (row, col) = row_col
         self.map[self.Unfold((row, col))].g = newValue
 
-    def SetH(self, (row, col), newValue):
+    def SetH(self, row_col, newValue):
+        (row, col) = row_col
         self.map[self.Unfold((row, col))].h = newValue
 
-    def SetF(self, (row, col), newValue):
+    def SetF(self, row_col, newValue):
+        (row, col) = row_col
         self.map[self.Unfold((row, col))].f = newValue
 
-    def CalcH(self, (row, col)):
+    def CalcH(self, row_col):
+        (row, col) = row_col
         self.map[self.Unfold((row, col))].h = abs(row - self.end[0]) + abs(col - self.end[0])
 
-    def CalcF(self, (row, col)):
+    def CalcF(self, row_col):
+        (row, col) = row_col
         unfoldIndex = self.Unfold((row, col))
         self.map[unfoldIndex].f = self.map[unfoldIndex].g + self.map[unfoldIndex].h
 
-    def AddToOpenList(self, (row, col)):
+    def AddToOpenList(self, row_col):
+        (row, col) = row_col
         self.openList.append((row, col))
 
-    def RemoveFromOpenList(self, (row, col)):
+    def RemoveFromOpenList(self, row_col):
+        (row, col) = row_col
         self.openList.remove((row, col))
 
-    def IsInOpenList(self, (row, col)):
+    def IsInOpenList(self, row_col):
+        (row, col) = row_col
         if self.openList.count((row, col)) > 0:
             return True
         else:
@@ -483,19 +493,24 @@ class path_finder():
         else:
             return False
 
-    def AddToClosedList(self, (row, col)):
+    def AddToClosedList(self, row_col):
+        (row, col) = row_col
         self.closedList.append((row, col))
 
-    def IsInClosedList(self, (row, col)):
+    def IsInClosedList(self, row_col):
+        (row, col) = row_col
         if self.closedList.count((row, col)) > 0:
             return True
         else:
             return False
 
-    def SetParent(self, (row, col), (parentRow, parentCol)):
+    def SetParent(self, row_col, parentRow_parentCol):
+        (row, col) = row_col
+        (parentRow, parentCol) = parentRow_parentCol
         self.map[self.Unfold((row, col))].parent = (parentRow, parentCol)
 
-    def GetParent(self, (row, col)):
+    def GetParent(self, row_col):
+        (row, col) = row_col
         return self.map[self.Unfold((row, col))].parent
 
     def draw(self):
@@ -546,7 +561,6 @@ class ghost():
         self.animDelay = 0
 
     def Draw(self):
-
         if thisGame.mode == 3:
             return False
 
@@ -619,7 +633,6 @@ class ghost():
             self.animDelay = 0
 
     def Move(self):
-
         self.x += self.velX
         self.y += self.velY
 
@@ -644,9 +657,7 @@ class ghost():
                 self.FollowNextPathWay()
 
     def FollowNextPathWay(self):
-
         # print "Ghost " + str(self.id) + " rem: " + self.currentPath
-
         # only follow this pathway if there is a possible path found!
         if not self.currentPath == False:
 
@@ -712,7 +723,6 @@ class fruit():
         self.fruitType = 1
 
     def Draw(self):
-
         if thisGame.mode == 3 or self.active == False:
             return False
 
@@ -720,7 +730,6 @@ class fruit():
                     (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1] - self.bounceY))
 
     def Move(self):
-
         if self.active == False:
             return False
 
@@ -782,7 +791,6 @@ class fruit():
                     thisGame.fruitTimer = 0
 
     def FollowNextPathWay(self):
-
         # only follow this pathway if there is a possible path found!
         if not self.currentPath == False:
 
@@ -798,7 +806,6 @@ class fruit():
 
 
 class pacman():
-
     def __init__(self):
         self.x = 0
         self.y = 0
@@ -833,7 +840,6 @@ class pacman():
         self.pelletSndNum = 0
 
     def Move(self):
-
         self.nearestRow = int(((self.y + 8) / 16))
         self.nearestCol = int(((self.x + 8) / 16))
 
@@ -923,7 +929,6 @@ class pacman():
             thisGame.fruitScoreTimer -= 1
 
     def Draw(self):
-
         if thisGame.mode == 3:
             return False
 
@@ -951,7 +956,6 @@ class pacman():
 
 
 class level():
-
     def __init__(self):
         self.lvlWidth = 0
         self.lvlHeight = 0
@@ -965,17 +969,19 @@ class level():
         self.pellets = 0
         self.powerPelletBlinkTimer = 0
 
-    def SetMapTile(self, (row, col), newValue):
+    def SetMapTile(self, row_col, newValue):
+        (row, col) = row_col
         self.map[(row * self.lvlWidth) + col] = newValue
 
-    def GetMapTile(self, (row, col)):
+    def GetMapTile(self, row_col):
+        (row, col) = row_col
         if row >= 0 and row < self.lvlHeight and col >= 0 and col < self.lvlWidth:
             return self.map[(row * self.lvlWidth) + col]
         else:
             return 0
 
-    def IsWall(self, (row, col)):
-
+    def IsWall(self, row_col):
+        (row, col) = row_col
         if row > thisLevel.lvlHeight - 1 or row < 0:
             return True
 
@@ -991,8 +997,9 @@ class level():
         else:
             return False
 
-    def CheckIfHitWall(self, (possiblePlayerX, possiblePlayerY), (row, col)):
-
+    def CheckIfHitWall(self, possiblePlayerX_possiblePlayerY, row_col):
+        (possiblePlayerX, possiblePlayerY) = possiblePlayerX_possiblePlayerY
+        (row, col) = row_col
         numCollisions = 0
 
         # check each of the 9 surrounding tiles for a collision
@@ -1010,16 +1017,18 @@ class level():
         else:
             return False
 
-    def CheckIfHit(self, (playerX, playerY), (x, y), cushion):
-
+    def CheckIfHit(self, playerX_playerY, x_y, cushion):
+        (playerX, playerY) = playerX_playerY
+        (x, y) = x_y
         if (playerX - x < cushion) and (playerX - x > -cushion) and (playerY - y < cushion) and (
                 playerY - y > -cushion):
             return True
         else:
             return False
 
-    def CheckIfHitSomething(self, (playerX, playerY), (row, col)):
-
+    def CheckIfHitSomething(self, playerX_playerY, row_col):
+        (playerX, playerY) = playerX_playerY
+        (row, col) = row_col
         for iRow in range(row - 1, row + 2, 1):
             for iCol in range(col - 1, col + 2, 1):
 
@@ -1082,7 +1091,6 @@ class level():
                                         player.y -= 16
 
     def GetGhostBoxPos(self):
-
         for row in range(0, self.lvlHeight, 1):
             for col in range(0, self.lvlWidth, 1):
                 if self.GetMapTile((row, col)) == tileID['ghost-door']:
@@ -1091,7 +1099,6 @@ class level():
         return False
 
     def GetPathwayPairPos(self):
-
         doorArray = []
 
         for row in range(0, self.lvlHeight, 1):
@@ -1126,7 +1133,6 @@ class level():
         return False
 
     def PrintMap(self):
-
         for row in range(0, self.lvlHeight, 1):
             outputLine = ""
             for col in range(0, self.lvlWidth, 1):
@@ -1135,7 +1141,6 @@ class level():
             # print outputLine
 
     def DrawMap(self):
-
         self.powerPelletBlinkTimer += 1
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
@@ -1170,7 +1175,6 @@ class level():
                         col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
 
     def LoadLevel(self, levelNum):
-
         self.map = {}
 
         self.pellets = 0
@@ -1309,7 +1313,6 @@ class level():
         self.Restart()
 
     def Restart(self):
-
         for i in range(0, 4, 1):
             # move ghosts back to home
 
@@ -1475,7 +1478,7 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-print
+print()
 thisGame.screenSize
 window = pygame.display.set_mode(thisGame.screenSize, pygame.DOUBLEBUF | pygame.HWSURFACE)
 
