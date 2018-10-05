@@ -37,7 +37,7 @@ JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
 # Must come before pygame.init()
-pygame.mixer.pre_init(22050, 16, 1, 512)
+pygame.mixer.pre_init(22050, -16, 1, 1024)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 pygame.mixer.init()
 
