@@ -37,7 +37,7 @@ JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
 # Must come before pygame.init()
-pygame.mixer.pre_init(22050, 16, 2, 512)
+pygame.mixer.pre_init(22050, 16, 1, 512)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 pygame.mixer.init()
 
@@ -54,6 +54,7 @@ img_Background = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds
 snd_pellet = {}
 snd_pellet[0] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav"))
 snd_pellet[1] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))
+snd_beginning = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "beginning.wav"))
 snd_powerpellet = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
 snd_eatgh = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
 snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
@@ -1478,7 +1479,6 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-print()
 thisGame.screenSize
 window = pygame.display.set_mode(thisGame.screenSize, pygame.DOUBLEBUF | pygame.HWSURFACE)
 

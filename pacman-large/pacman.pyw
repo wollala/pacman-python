@@ -63,7 +63,7 @@ IMG_EDGE_SHADOW_COLOR = (0xff, 0x00, 0xff, 0xff)
 IMG_PELLET_COLOR = (0x80, 0x00, 0x80, 0xff)
 
 # Must come before pygame.init()
-pygame.mixer.pre_init(22050, 16, 2, 512)
+pygame.mixer.pre_init(22050, 16, 1, 512)
 pygame.mixer.init()
 
 clock = pygame.time.Clock()
