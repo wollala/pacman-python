@@ -1566,7 +1566,7 @@ while True:
         # ready to level start
         thisGame.modeTimer += 1
 
-        if thisGame.modeTimer == 240:
+        if thisGame.modeTimer == 238:
             thisGame.SetMode(1)
 
     if thisGame.mode == 1:
