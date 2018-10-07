@@ -40,6 +40,8 @@ JS_STARTBUTTON = 0  # button number to start the game. this is a matter of perso
 pygame.mixer.pre_init(22050, -16, 1, 1024)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 pygame.mixer.init()
+pygame.mixer.set_num_channels(8)
+channel_beginning = pygame.mixer.Channel(7)
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -55,6 +57,7 @@ snd_pellet = {}
 snd_pellet[0] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav"))
 snd_pellet[1] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))
 snd_beginning = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "beginning.wav"))
+snd_default = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
 snd_powerpellet = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
 snd_eatgh = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
 snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
@@ -85,8 +88,10 @@ class game():
             f = open(os.path.join(SCRIPT_PATH, "res", "hiscore.txt"))
             hs = []
             for line in f:
-                while len(line) > 0 and (line[0] == "\n" or line[0] == "\r"): line = line[1:]
-                while len(line) > 0 and (line[-1] == "\n" or line[-1] == "\r"): line = line[:-1]
+                while len(line) > 0 and (line[0] == "\n" or line[0] == "\r"):
+                    line = line[1:]
+                while len(line) > 0 and (line[-1] == "\n" or line[-1] == "\r"):
+                    line = line[:-1]
                 score = int(line.split(" ")[0])
                 name = line.partition(" ")[2]
                 if score > 99999999: score = 99999999
@@ -203,7 +208,7 @@ class game():
         self.score = 0
         self.lives = 3
 
-        self.SetMode(4)
+        self.SetMode(0)
         thisLevel.LoadLevel(thisGame.GetLevelNum())
 
     def AddToScore(self, amount):
@@ -226,7 +231,7 @@ class game():
 
         if self.mode == 3:
             screen.blit(self.imGameOver, (self.screenSize[0] / 2 - 32, self.screenSize[1] / 2 - 10))
-        elif self.mode == 4:
+        elif self.mode == 0 or self.mode == 4:
             screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12))
 
         self.DrawNumber(self.levelNum, (0, self.screenSize[1] - 12))
@@ -260,7 +265,7 @@ class game():
         (newX, newY) = newX_newY
         self.screenPixelPos = (newX, newY)
         self.screenNearestTilePos = (
-        int(newY / 16), int(newX / 16))  # nearest-tile position of the screen from the UL corner
+            int(newY / 16), int(newX / 16))  # nearest-tile position of the screen from the UL corner
         self.screenPixelOffset = (newX - self.screenNearestTilePos[1] * 16, newY - self.screenNearestTilePos[0] * 16)
 
     def GetScreenPos(self):
@@ -272,7 +277,7 @@ class game():
     def SetNextLevel(self):
         self.levelNum += 1
 
-        self.SetMode(4)
+        self.SetMode(0)
         thisLevel.LoadLevel(thisGame.GetLevelNum())
 
         player.velX = 0
@@ -385,7 +390,7 @@ class path_finder():
             else:
                 doContinue = False
 
-        if thisLowestFNode == False:
+        if not thisLowestFNode:
             return False
 
         # reconstruct path
@@ -690,7 +695,7 @@ class ghost():
                     (randRow, randCol) = (0, 0)
 
                     while not thisLevel.GetMapTile((randRow, randCol)) == tileID['pellet'] or (randRow, randCol) == (
-                    0, 0):
+                            0, 0):
                         randRow = random.randint(1, thisLevel.lvlHeight - 2)
                         randCol = random.randint(1, thisLevel.lvlWidth - 2)
 
@@ -876,7 +881,7 @@ class pacman():
                         ghosts[i].x = ghosts[i].nearestCol * 16
                         ghosts[i].y = ghosts[i].nearestRow * 16
                         ghosts[i].currentPath = path.FindPath((ghosts[i].nearestRow, ghosts[i].nearestCol), (
-                        thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
+                            thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
                         ghosts[i].FollowNextPathWay()
 
                         # set game mode to brief pause after eating
@@ -1161,19 +1166,19 @@ class level():
                     if useTile == tileID['pellet-power']:
                         if self.powerPelletBlinkTimer < 30:
                             screen.blit(tileIDImage[useTile], (
-                            col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
+                                col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
 
                     elif useTile == tileID['showlogo']:
                         screen.blit(thisGame.imLogo, (
-                        col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
+                            col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
 
                     elif useTile == tileID['hiscores']:
                         screen.blit(thisGame.imHiscores, (
-                        col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
+                            col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
 
                     else:
                         screen.blit(tileIDImage[useTile], (
-                        col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
+                            col * 16 - thisGame.screenPixelOffset[0], row * 16 - thisGame.screenPixelOffset[1]))
 
     def LoadLevel(self, levelNum):
         self.map = {}
@@ -1474,12 +1479,15 @@ tileIDName = {}  # gives tile name (when the ID# is known)
 tileID = {}  # gives tile ID (when the name is known)
 tileIDImage = {}  # gives tile image (when the ID# is known)
 
+oldEdgeLightColor = None
+oldEdgeShadowColor = None
+oldFillColor = None
+
 # create game and level objects and load first level
 thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-thisGame.screenSize
 window = pygame.display.set_mode(thisGame.screenSize, pygame.DOUBLEBUF | pygame.HWSURFACE)
 
 # initialise the joystick
@@ -1495,8 +1503,16 @@ else:
 while True:
 
     CheckIfCloseButton(pygame.event.get())
+    if thisGame.mode == 0:
+        # ready to the first level start
+        thisGame.modeTimer += 1
 
-    if thisGame.mode == 1:
+        if not channel_beginning.get_busy():
+            channel_beginning.play(snd_beginning)
+        elif thisGame.modeTimer == 160:
+            thisGame.SetMode(4)
+
+    elif thisGame.mode == 1:
         # normal gameplay mode
         CheckInputs()
 
@@ -1588,7 +1604,7 @@ while True:
         if thisGame.fruitScoreTimer > 0:
             if thisGame.modeTimer % 2 == 0:
                 thisGame.DrawNumber(2500, (
-                thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
+                    thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
 
         for i in range(0, 4, 1):
             ghosts[i].Draw()

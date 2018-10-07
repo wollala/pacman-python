@@ -63,8 +63,10 @@ IMG_EDGE_SHADOW_COLOR = (0xff, 0x00, 0xff, 0xff)
 IMG_PELLET_COLOR = (0x80, 0x00, 0x80, 0xff)
 
 # Must come before pygame.init()
-pygame.mixer.pre_init(22050, 16, 1, 512)
+pygame.mixer.pre_init(22050, -16, 1, 1024)
 pygame.mixer.init()
+pygame.mixer.set_num_channels(7)
+channel_backgound = pygame.mixer.Channel(6)
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -79,6 +81,11 @@ img_Background = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds
 snd_pellet = {}
 snd_pellet[0] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav"))
 snd_pellet[1] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))
+snd_levelintro = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "levelintro.wav"))
+snd_default = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
+snd_extrapac = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extrapac.wav"))
+snd_gh2gohome = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "gh2gohome.wav"))
+snd_death = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "death.wav"))
 snd_powerpellet = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
 snd_eatgh = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
 snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
@@ -109,8 +116,10 @@ class game():
             f = open(os.path.join(SCRIPT_PATH, "res", "hiscore.txt"))
             hs = []
             for line in f:
-                while len(line) > 0 and (line[0] == "\n" or line[0] == "\r"): line = line[1:]
-                while len(line) > 0 and (line[-1] == "\n" or line[-1] == "\r"): line = line[:-1]
+                while len(line) > 0 and (line[0] == "\n" or line[0] == "\r"):
+                    line = line[1:]
+                while len(line) > 0 and (line[-1] == "\n" or line[-1] == "\r"):
+                    line = line[:-1]
                 score = int(line.split(" ")[0])
                 name = line.partition(" ")[2]
                 if score > 99999999: score = 99999999
@@ -187,13 +196,6 @@ class game():
         self.score = 0
         self.lives = 3
 
-        # game "mode" variable
-        # 1 = normal
-        # 2 = hit ghost
-        # 3 = game over
-        # 4 = wait to start
-        # 5 = wait after eating ghost
-        # 6 = wait after finishing level
         self.mode = 0
         self.modeTimer = 0
         self.ghostTimer = 0
@@ -227,7 +229,7 @@ class game():
         self.score = 0
         self.lives = 3
 
-        self.SetMode(4)
+        self.SetMode(0)
         thisLevel.LoadLevel(thisGame.GetLevelNum())
 
     def AddToScore(self, amount):
@@ -251,7 +253,7 @@ class game():
         if self.mode == 3:
             screen.blit(self.imGameOver, (self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2),
                                           self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2)))
-        elif self.mode == 4:
+        elif self.mode == 0 or self.mode == 4:
             screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12))
 
         self.DrawNumber(self.levelNum, (0, self.screenSize[1] - 20))
@@ -297,19 +299,35 @@ class game():
     def SetNextLevel(self):
         self.levelNum += 1
 
-        self.SetMode(4)
+        self.SetMode(0)
         thisLevel.LoadLevel(thisGame.GetLevelNum())
 
         player.velX = 0
         player.velY = 0
         player.anim_pacmanCurrent = player.anim_pacmanS
 
+    def PlayBackgoundSound(self, snd):
+        channel_backgound.stop()
+        channel_backgound.play(snd, loops=-1)
+
     def SetMode(self, newMode):
+        print ("***** GAME MODE IS NOW ***** " + str(newMode))
         self.mode = newMode
         self.modeTimer = 0
 
+        if newMode == 0:
+            self.PlayBackgoundSound(snd_levelintro)
+        elif newMode == 1:
+            self.PlayBackgoundSound(snd_default)
+        elif newMode == 2:
+            self.PlayBackgoundSound(snd_death)
+        elif newMode == 8:
+            self.PlayBackgoundSound(snd_gh2gohome)
+        elif newMode == 9:
+            self.PlayBackgoundSound(snd_extrapac)
+        else:
+            channel_backgound.stop()
 
-# print " ***** GAME MODE IS NOW ***** " + str(newMode)
 
 class node():
     def __init__(self):
@@ -411,7 +429,7 @@ class path_finder():
             else:
                 doContinue = False
 
-        if thisLowestFNode == False:
+        if not thisLowestFNode:
             return False
 
         # reconstruct path
@@ -926,6 +944,7 @@ class pacman():
             thisGame.ghostTimer -= 1
 
             if thisGame.ghostTimer == 0:
+                thisGame.PlayBackgoundSound(snd_default)
                 for i in range(0, 4, 1):
                     if ghosts[i].state == 2:
                         ghosts[i].state = 1
@@ -971,7 +990,7 @@ class pacman():
         screen.blit(self.anim_pacmanCurrent[self.animFrame],
                     (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
 
-        if thisGame.mode == 1:
+        if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
             if not self.velX == 0 or not self.velY == 0:
                 # only Move mouth when pacman is moving
                 self.animFrame += 1
@@ -1084,8 +1103,8 @@ class level():
 
                     elif result == tileID['pellet-power']:
                         # got a power pellet
+                        thisGame.SetMode(9)
                         thisLevel.SetMapTile((iRow, iCol), 0)
-                        pygame.mixer.stop()
                         snd_powerpellet.play()
 
                         thisGame.AddToScore(100)
@@ -1398,7 +1417,7 @@ def CheckIfCloseButton(events):
 
 
 def CheckInputs():
-    if thisGame.mode == 1:
+    if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
         if pygame.key.get_pressed()[pygame.K_RIGHT] or (js != None and js.get_axis(JS_XAXIS) > 0.5):
             if not (player.velX == player.speed and player.velY == 0) and not thisLevel.CheckIfHitWall(
                     (player.x + player.speed, player.y), (player.nearestRow, player.nearestCol)):
@@ -1528,15 +1547,33 @@ if pygame.joystick.get_count() > 0:
 else:
     js = None
 
-while True:
+# game "mode" variable
+# 0 = ready to level start
+# 1 = normal
+# 2 = hit ghost
+# 3 = game over
+# 4 = wait to start
+# 5 = wait after eating ghost
+# 6 = wait after finishing level
+# 7 = flashing maze after finishing level
+# 8 = extra pacman, small ghost mode
+# 9 = changed ghost to glasses
+# 10 = blank screen before changing levels
 
+while True:
     CheckIfCloseButton(pygame.event.get())
+    if thisGame.mode == 0:
+        # ready to level start
+        thisGame.modeTimer += 1
+
+        if thisGame.modeTimer == 240:
+            thisGame.SetMode(1)
 
     if thisGame.mode == 1:
         # normal gameplay mode
         CheckInputs()
-
         thisGame.modeTimer += 1
+
         player.Move()
         for i in range(0, 4, 1):
             ghosts[i].Move()
@@ -1574,7 +1611,7 @@ while True:
         thisGame.modeTimer += 1
 
         if thisGame.modeTimer == 30:
-            thisGame.SetMode(1)
+            thisGame.SetMode(8)
 
     elif thisGame.mode == 6:
         # pause after eating all the pellets
@@ -1606,9 +1643,45 @@ while True:
             thisLevel.fillColor = oldFillColor
             GetCrossRef()
         elif thisGame.modeTimer == 150:
-            thisGame.SetMode(8)
+            thisGame.SetMode(10)
 
     elif thisGame.mode == 8:
+        CheckInputs()
+        ghostState = 1
+        thisGame.modeTimer += 1
+
+        player.Move()
+
+        for i in range(0, 4, 1):
+            ghosts[i].Move()
+
+        for i in range(0, 4, 1):
+            if ghosts[i].state == 3:
+                ghostState = 3
+                break
+            elif ghosts[i].state == 2:
+                ghostState = 2
+
+        if thisLevel.pellets == 0:
+            # WON THE LEVEL
+            thisGame.SetMode(6)
+        elif ghostState == 1:
+            thisGame.SetMode(1)
+        elif ghostState == 2:
+            thisGame.SetMode(9)
+
+        thisFruit.Move()
+
+    elif thisGame.mode == 9:
+        CheckInputs()
+        thisGame.modeTimer += 1
+
+        player.Move()
+        for i in range(0, 4, 1):
+            ghosts[i].Move()
+        thisFruit.Move()
+
+    elif thisGame.mode == 10:
         # blank screen before changing levels
         thisGame.modeTimer += 1
         if thisGame.modeTimer == 10:
@@ -1618,7 +1691,7 @@ while True:
 
     screen.blit(img_Background, (0, 0))
 
-    if not thisGame.mode == 8:
+    if not thisGame.mode == 10:
         thisLevel.DrawMap()
 
         if thisGame.fruitScoreTimer > 0:
@@ -1628,6 +1701,7 @@ while True:
 
         for i in range(0, 4, 1):
             ghosts[i].Draw()
+
         thisFruit.Draw()
         player.Draw()
 
