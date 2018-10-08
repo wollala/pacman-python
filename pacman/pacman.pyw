@@ -10,6 +10,21 @@ from pygame.locals import *
 # WIN???
 SCRIPT_PATH = sys.path[0]
 
+# constants for the high-score display
+HS_FONT_SIZE = 10
+HS_LINE_HEIGHT = 12
+HS_WIDTH = 276
+HS_HEIGHT = 86
+HS_XOFFSET = 32
+HS_YOFFSET = 256
+HS_ALPHA = 200
+
+# See GetCrossRef() -- where these colors occur in a GIF, they are replaced according to the level file
+IMG_EDGE_LIGHT_COLOR = (255, 206, 255, 255)
+IMG_FILL_COLOR = (132, 0, 132, 255)
+IMG_EDGE_SHADOW_COLOR = (255, 0, 255, 255)
+IMG_PELLET_COLOR = (128, 0, 128, 255)
+
 # NO_GIF_TILES -- tile numbers which do not correspond to a GIF file
 # currently only "23" for the high-score list
 NO_GIF_TILES = [23]
@@ -135,15 +150,15 @@ class game():
     def makehiscorelist(self):
         "Read the High-Score file and convert it to a useable Surface."
         # My apologies for all the hard-coded constants.... -Andy
-        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), 10)
-        scoresurf = pygame.Surface((276, 86), pygame.SRCALPHA)
-        scoresurf.set_alpha(200)
+        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
+        scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
+        scoresurf.set_alpha(HS_ALPHA)
         linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
         scoresurf.blit(linesurf, (0, 0))
         hs = self.gethiscores()
         vpos = 0
         for line in hs:
-            vpos += 12
+            vpos += HS_LINE_HEIGHT
             linesurf = f.render(line[1].rjust(22) + str(line[0]).rjust(9), 1, (255, 255, 255))
             scoresurf.blit(linesurf, (0, vpos))
         return scoresurf
@@ -1217,11 +1232,9 @@ class level():
 
                 if firstWord == "lvlwidth":
                     self.lvlWidth = int(str_splitBySpace[2])
-                    # print "Width is " + str( self.lvlWidth )
 
                 elif firstWord == "lvlheight":
                     self.lvlHeight = int(str_splitBySpace[2])
-                    # print "Height is " + str( self.lvlHeight )
 
                 elif firstWord == "edgecolor":
                     # edge color keyword for backwards compatibility (single edge color) mazes
@@ -1433,23 +1446,22 @@ def GetCrossRef():
             for y in range(0, 16, 1):
                 for x in range(0, 16, 1):
 
-                    if tileIDImage[thisID].get_at((x, y)) == (255, 206, 255, 255):
+                    if tileIDImage[thisID].get_at((x, y)) == IMG_EDGE_LIGHT_COLOR:
                         # wall edge
                         tileIDImage[thisID].set_at((x, y), thisLevel.edgeLightColor)
 
-                    elif tileIDImage[thisID].get_at((x, y)) == (132, 0, 132, 255):
+                    elif tileIDImage[thisID].get_at((x, y)) == IMG_FILL_COLOR:
                         # wall fill
                         tileIDImage[thisID].set_at((x, y), thisLevel.fillColor)
 
-                    elif tileIDImage[thisID].get_at((x, y)) == (255, 0, 255, 255):
+                    elif tileIDImage[thisID].get_at((x, y)) == IMG_EDGE_SHADOW_COLOR:
                         # pellet color
                         tileIDImage[thisID].set_at((x, y), thisLevel.edgeShadowColor)
 
-                    elif tileIDImage[thisID].get_at((x, y)) == (128, 0, 128, 255):
+                    elif tileIDImage[thisID].get_at((x, y)) == IMG_PELLET_COLOR:
                         # pellet color
                         tileIDImage[thisID].set_at((x, y), thisLevel.pelletColor)
 
-                        # print str_splitBySpace[0] + " is married to " + str_splitBySpace[1]
         lineNum += 1
 
 
@@ -1654,7 +1666,7 @@ while True:
         player.Draw()
 
         if thisGame.mode == 3:
-            screen.blit(thisGame.imHiscores, (32, 256))
+            screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET))
 
     if thisGame.mode == 5:
         thisGame.DrawNumber(thisGame.ghostValue / 2,

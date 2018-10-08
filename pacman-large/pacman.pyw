@@ -12,7 +12,6 @@ SCRIPT_PATH = sys.path[0]
 
 TILE_WIDTH = TILE_HEIGHT = 24
 
-# Oops! os.getlogin() only works if you launch from a terminal
 # constants for the high-score display
 HS_FONT_SIZE = 14
 HS_LINE_HEIGHT = 16
@@ -28,10 +27,10 @@ SCORE_YOFFSET = 34  # pixels from bottom edge (to top of score)
 SCORE_COLWIDTH = 13  # width of each character
 
 # See GetCrossRef() -- where these colors occur in a GIF, they are replaced according to the level file
-IMG_EDGE_LIGHT_COLOR = (0xff, 0xce, 0xff, 0xff)
-IMG_FILL_COLOR = (0x84, 0x00, 0x84, 0xff)
-IMG_EDGE_SHADOW_COLOR = (0xff, 0x00, 0xff, 0xff)
-IMG_PELLET_COLOR = (0x80, 0x00, 0x80, 0xff)
+IMG_EDGE_LIGHT_COLOR = (255, 206, 255, 255)
+IMG_FILL_COLOR = (132, 0, 132, 255)
+IMG_EDGE_SHADOW_COLOR = (255, 0, 255, 255)
+IMG_PELLET_COLOR = (128, 0, 128, 255)
 
 # NO_GIF_TILES -- tile numbers which do not correspond to a GIF file
 # currently only "23" for the high-score list
@@ -841,7 +840,7 @@ class pacman():
         self.y = 0
         self.velX = 0
         self.velY = 0
-        self.speed = 3
+        self.speed = 2
 
         self.nearestRow = 0
         self.nearestCol = 0
@@ -1258,11 +1257,9 @@ class level():
 
                 if firstWord == "lvlwidth":
                     self.lvlWidth = int(str_splitBySpace[2])
-                # print "Width is " + str( self.lvlWidth )
 
                 elif firstWord == "lvlheight":
                     self.lvlHeight = int(str_splitBySpace[2])
-                # print "Height is " + str( self.lvlHeight )
 
                 elif firstWord == "edgecolor":
                     # edge color keyword for backwards compatibility (single edge color) mazes
@@ -1457,7 +1454,6 @@ def GetCrossRef():
             useLine = False
         else:
             # print str(wordNum) + ". " + j
-
             useLine = True
 
         if useLine == True:
@@ -1491,7 +1487,6 @@ def GetCrossRef():
                         # pellet color
                         tileIDImage[thisID].set_at((x, y), thisLevel.pelletColor)
 
-        # print str_splitBySpace[0] + " is married to " + str_splitBySpace[1]
         lineNum += 1
 
 
@@ -1516,6 +1511,10 @@ thisFruit = fruit()
 tileIDName = {}  # gives tile name (when the ID# is known)
 tileID = {}  # gives tile ID (when the name is known)
 tileIDImage = {}  # gives tile image (when the ID# is known)
+
+oldEdgeLightColor = None
+oldEdgeShadowColor = None
+oldFillColor = None
 
 # create game and level objects and load first level
 thisGame = game()
