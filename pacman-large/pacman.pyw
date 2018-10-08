@@ -1,22 +1,5 @@
 #! /usr/bin/python
 
-# pacman.pyw
-# By David Reilly
-
-# Modified by Andy Sommerville, 8 October 2007:
-# - Changed hard-coded DOS paths to os.path calls
-# - Added constant SCRIPT_PATH (so you don't need to have pacman.pyw and res in your cwd, as long
-# -   as those two are in the same directory)
-# - Changed text-file reading to accomodate any known EOLn method (\n, \r, or \r\n)
-# - I (happily) don't have a Windows box to test this. Blocks marked "WIN???"
-# -   should be examined if this doesn't run in Windows
-# - Added joystick support (configure by changing JS_* constants)
-# - Added a high-score list. Depends on wx for querying the user's name
-
-# Modified by Andy Sommerville, 11 October 2007:
-# - Mom's eyes aren't what they used to be, so I'm switching 16x16 tiles to 24x24
-#   Added constants TILE_WIDTH,TILE_HEIGHT to make this easier to change later.
-
 import os
 import random
 import sys
@@ -29,12 +12,6 @@ SCRIPT_PATH = sys.path[0]
 
 TILE_WIDTH = TILE_HEIGHT = 24
 
-# NO_GIF_TILES -- tile numbers which do not correspond to a GIF file
-# currently only "23" for the high-score list
-NO_GIF_TILES = [23]
-
-NO_WX = 0  # if set, the high-score code will not attempt to ask the user his name
-USER_NAME = "User"  # USER_NAME=os.getlogin() # the default user name if wx fails to load or NO_WX
 # Oops! os.getlogin() only works if you launch from a terminal
 # constants for the high-score display
 HS_FONT_SIZE = 14
@@ -50,17 +27,24 @@ SCORE_XOFFSET = 50  # pixels from left edge
 SCORE_YOFFSET = 34  # pixels from bottom edge (to top of score)
 SCORE_COLWIDTH = 13  # width of each character
 
-# Joystick defaults - maybe add a Preferences dialog in the future?
-JS_DEVNUM = 0  # device 0 (pygame joysticks always start at 0). if JS_DEVNUM is not a valid device, will use 0
-JS_XAXIS = 0  # axis 0 for left/right (default for most joysticks)
-JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
-JS_STARTBUTTON = 9  # button number to start the game. this is a matter of personal preference, and will vary from device to device
-
 # See GetCrossRef() -- where these colors occur in a GIF, they are replaced according to the level file
 IMG_EDGE_LIGHT_COLOR = (0xff, 0xce, 0xff, 0xff)
 IMG_FILL_COLOR = (0x84, 0x00, 0x84, 0xff)
 IMG_EDGE_SHADOW_COLOR = (0xff, 0x00, 0xff, 0xff)
 IMG_PELLET_COLOR = (0x80, 0x00, 0x80, 0xff)
+
+# NO_GIF_TILES -- tile numbers which do not correspond to a GIF file
+# currently only "23" for the high-score list
+NO_GIF_TILES = [23]
+
+NO_WX = 0  # if set, the high-score code will not attempt to ask the user his name
+USER_NAME = "User"  # USER_NAME=os.getlogin() # the default user name if wx fails to load or NO_WX
+
+# Joystick defaults - maybe add a Preferences dialog in the future?
+JS_DEVNUM = 0  # device 0 (pygame joysticks always start at 0). if JS_DEVNUM is not a valid device, will use 0
+JS_XAXIS = 0  # axis 0 for left/right (default for most joysticks)
+JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
+JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
 # Must come before pygame.init()
 pygame.mixer.pre_init(22050, -16, 1, 1024)
@@ -315,7 +299,6 @@ class game():
         channel_backgound.play(snd, loops=-1)
 
     def SetMode(self, newMode):
-        print ("***** GAME MODE IS NOW ***** " + str(newMode))
         self.mode = newMode
         self.modeTimer = 0
 
@@ -331,7 +314,6 @@ class game():
             self.PlayBackgoundSound(snd_extrapac)
         else:
             channel_backgound.stop()
-
 
 class node():
     def __init__(self):
@@ -737,7 +719,7 @@ class ghost():
                     (randRow, randCol) = (0, 0)
 
                     while not thisLevel.GetMapTile((randRow, randCol)) == tileID['pellet'] or (randRow, randCol) == (
-                    0, 0):
+                            0, 0):
                         randRow = random.randint(1, thisLevel.lvlHeight - 2)
                         randCol = random.randint(1, thisLevel.lvlWidth - 2)
 
@@ -923,7 +905,7 @@ class pacman():
                         ghosts[i].x = ghosts[i].nearestCol * TILE_WIDTH
                         ghosts[i].y = ghosts[i].nearestRow * TILE_HEIGHT
                         ghosts[i].currentPath = path.FindPath((ghosts[i].nearestRow, ghosts[i].nearestCol), (
-                        thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
+                            thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
                         ghosts[i].FollowNextPathWay()
 
                         # set game mode to brief pause after eating
@@ -1083,7 +1065,8 @@ class level():
         for iRow in range(row - 1, row + 2, 1):
             for iCol in range(col - 1, col + 2, 1):
 
-                if (playerX - (iCol * TILE_WIDTH) < TILE_WIDTH) and (playerX - (iCol * TILE_WIDTH) > -TILE_WIDTH) and (
+                if (playerX - (iCol * TILE_WIDTH) < TILE_WIDTH) and (
+                        playerX - (iCol * TILE_WIDTH) > -TILE_WIDTH) and (
                         playerY - (iRow * TILE_HEIGHT) < TILE_HEIGHT) and (
                         playerY - (iRow * TILE_HEIGHT) > -TILE_HEIGHT):
                     # check the offending tile ID
@@ -1206,8 +1189,6 @@ class level():
             outputLine = ""
             for col in range(0, self.lvlWidth, 1):
                 outputLine += str(self.GetMapTile((row, col))) + ", "
-
-    # print outputLine
 
     def DrawMap(self):
         self.powerPelletBlinkTimer += 1
@@ -1421,7 +1402,7 @@ def CheckIfCloseButton(events):
 
 def CheckInputs():
     if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
-        if pygame.key.get_pressed()[pygame.K_RIGHT] or (js != None and js.get_axis(JS_XAXIS) > 0.5):
+        if pygame.key.get_pressed()[pygame.K_RIGHT] or (js is not None and js.get_axis(JS_XAXIS) > 0.5):
             if not (player.velX == player.speed and player.velY == 0) and not thisLevel.CheckIfHitWall(
                     (player.x + player.speed, player.y), (player.nearestRow, player.nearestCol)):
                 player.velX = player.speed
@@ -1444,6 +1425,9 @@ def CheckInputs():
                     (player.x, player.y - player.speed), (player.nearestRow, player.nearestCol)):
                 player.velX = 0
                 player.velY = -player.speed
+
+    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+        sys.exit(0)
 
     elif thisGame.mode == 3:
         if pygame.key.get_pressed()[pygame.K_RETURN] or (js != None and js.get_button(JS_STARTBUTTON)):
@@ -1538,8 +1522,7 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-window = pygame.display.set_mode(thisGame.screenSize, pygame.HWSURFACE | pygame.DOUBLEBUF)
-print("scrrenSize: " ,thisGame.screenSize)
+window = pygame.display.set_mode(thisGame.screenSize, pygame.DOUBLEBUF | pygame.HWSURFACE)
 
 # initialise the joystick
 if pygame.joystick.get_count() > 0:
@@ -1701,11 +1684,10 @@ while True:
         if thisGame.fruitScoreTimer > 0:
             if thisGame.modeTimer % 2 == 0:
                 thisGame.DrawNumber(2500, (
-                thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
+                    thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
 
         for i in range(0, 4, 1):
             ghosts[i].Draw()
-
         thisFruit.Draw()
         player.Draw()
 

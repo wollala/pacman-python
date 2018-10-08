@@ -1,18 +1,5 @@
 #! /usr/bin/python
 
-# pacman.pyw
-# By David Reilly
-
-# Modified by Andy Sommerville, 8 October 2007:
-# - Changed hard-coded DOS paths to os.path calls
-# - Added constant SCRIPT_PATH (so you don't need to have pacman.pyw and res in your cwd, as long
-# -   as those two are in the same directory)
-# - Changed text-file reading to accomodate any known EOLn method (\n, \r, or \r\n)
-# - I (happily) don't have a Windows box to test this. Blocks marked "WIN???"
-# -   should be examined if this doesn't run in Windows
-# - Added joystick support (configure by changing JS_* constants)
-# - Added a high-score list. Depends on wx for querying the user's name
-
 import os
 import random
 import sys
@@ -38,10 +25,9 @@ JS_STARTBUTTON = 0  # button number to start the game. this is a matter of perso
 
 # Must come before pygame.init()
 pygame.mixer.pre_init(22050, -16, 1, 1024)
-JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 pygame.mixer.init()
-pygame.mixer.set_num_channels(8)
-channel_beginning = pygame.mixer.Channel(7)
+pygame.mixer.set_num_channels(7)
+channel_backgound = pygame.mixer.Channel(6)
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -56,8 +42,11 @@ img_Background = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds
 snd_pellet = {}
 snd_pellet[0] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav"))
 snd_pellet[1] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))
-snd_beginning = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "beginning.wav"))
+snd_levelintro = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "levelintro.wav"))
 snd_default = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
+snd_extrapac = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extrapac.wav"))
+snd_gh2gohome = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "gh2gohome.wav"))
+snd_death = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "death.wav"))
 snd_powerpellet = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
 snd_eatgh = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
 snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
@@ -168,13 +157,6 @@ class game():
         self.score = 0
         self.lives = 3
 
-        # game "mode" variable
-        # 1 = normal
-        # 2 = hit ghost
-        # 3 = game over
-        # 4 = wait to start
-        # 5 = wait after eating ghost
-        # 6 = wait after finishing level
         self.mode = 0
         self.modeTimer = 0
         self.ghostTimer = 0
@@ -186,12 +168,12 @@ class game():
         self.SetMode(3)
 
         # camera variables
+        self.screenTileSize = (23, 21)
+        self.screenSize = (self.screenTileSize[1] * 16, self.screenTileSize[0] * 16)
+
         self.screenPixelPos = (0, 0)  # absolute x,y position of the screen from the upper-left corner of the level
         self.screenNearestTilePos = (0, 0)  # nearest-tile position of the screen from the UL corner
         self.screenPixelOffset = (0, 0)  # offset in pixels of the screen from its nearest-tile position
-
-        self.screenTileSize = (23, 21)
-        self.screenSize = (self.screenTileSize[1] * 16, self.screenTileSize[0] * 16)
 
         # numerical display digits
         self.digit = {}
@@ -245,16 +227,19 @@ class game():
             screen.blit(self.digit[iDigit], (x + i * 9, y))
 
     def SmartMoveScreen(self):
-
         possibleScreenX = player.x - self.screenTileSize[1] / 2 * 16
         possibleScreenY = player.y - self.screenTileSize[0] / 2 * 16
 
-        if possibleScreenX < 0:
+        if self.screenSize[0] >= thisLevel.lvlWidth * 16:
+            possibleScreenX = -(self.screenSize[0] - thisLevel.lvlWidth * 16) / 2
+        elif possibleScreenX < 0:
             possibleScreenX = 0
         elif possibleScreenX > thisLevel.lvlWidth * 16 - self.screenSize[0]:
             possibleScreenX = thisLevel.lvlWidth * 16 - self.screenSize[0]
 
-        if possibleScreenY < 0:
+        if self.screenSize[1] >= thisLevel.lvlHeight * 16:
+            possibleScreenY = -(self.screenSize[1] - thisLevel.lvlHeight * 16) / 2
+        elif possibleScreenY < 0:
             possibleScreenY = 0
         elif possibleScreenY > thisLevel.lvlHeight * 16 - self.screenSize[1]:
             possibleScreenY = thisLevel.lvlHeight * 16 - self.screenSize[1]
@@ -284,11 +269,26 @@ class game():
         player.velY = 0
         player.anim_pacmanCurrent = player.anim_pacmanS
 
+    def PlayBackgoundSound(self, snd):
+        channel_backgound.stop()
+        channel_backgound.play(snd, loops=-1)
+
     def SetMode(self, newMode):
         self.mode = newMode
         self.modeTimer = 0
-        # print " ***** GAME MODE IS NOW ***** " + str(newMode)
 
+        if newMode == 0:
+            self.PlayBackgoundSound(snd_levelintro)
+        elif newMode == 1:
+            self.PlayBackgoundSound(snd_default)
+        elif newMode == 2:
+            self.PlayBackgoundSound(snd_death)
+        elif newMode == 8:
+            self.PlayBackgoundSound(snd_gh2gohome)
+        elif newMode == 9:
+            self.PlayBackgoundSound(snd_extrapac)
+        else:
+            channel_backgound.stop()
 
 class node():
     def __init__(self):
@@ -649,7 +649,7 @@ class ghost():
             # if the ghost is lined up with the grid again
             # meaning, it's time to go to the next path item
 
-            if (self.currentPath):
+            if len(self.currentPath) > 0:
                 self.currentPath = self.currentPath[1:]
                 self.FollowNextPathWay()
 
@@ -679,7 +679,6 @@ class ghost():
 
             else:
                 # this ghost has reached his destination!!
-
                 if not self.state == 3:
                     # chase pac-man
                     self.currentPath = path.FindPath((self.nearestRow, self.nearestCol),
@@ -906,6 +905,7 @@ class pacman():
             thisGame.ghostTimer -= 1
 
             if thisGame.ghostTimer == 0:
+                thisGame.PlayBackgoundSound(snd_default)
                 for i in range(0, 4, 1):
                     if ghosts[i].state == 2:
                         ghosts[i].state = 1
@@ -951,7 +951,7 @@ class pacman():
         screen.blit(self.anim_pacmanCurrent[self.animFrame],
                     (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
 
-        if thisGame.mode == 1:
+        if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
             if not self.velX == 0 or not self.velY == 0:
                 # only Move mouth when pacman is moving
                 self.animFrame += 1
@@ -1012,8 +1012,10 @@ class level():
         for iRow in range(row - 1, row + 2, 1):
             for iCol in range(col - 1, col + 2, 1):
 
-                if (possiblePlayerX - (iCol * 16) < 16) and (possiblePlayerX - (iCol * 16) > -16) and (
-                        possiblePlayerY - (iRow * 16) < 16) and (possiblePlayerY - (iRow * 16) > -16):
+                if (possiblePlayerX - (iCol * 16) < 16) and (
+                        possiblePlayerX - (iCol * 16) > -16) and (
+                        possiblePlayerY - (iRow * 16) < 16) and (
+                        possiblePlayerY - (iRow * 16) > -16):
 
                     if self.IsWall((iRow, iCol)):
                         numCollisions += 1
@@ -1038,7 +1040,9 @@ class level():
         for iRow in range(row - 1, row + 2, 1):
             for iCol in range(col - 1, col + 2, 1):
 
-                if (playerX - (iCol * 16) < 16) and (playerX - (iCol * 16) > -16) and (playerY - (iRow * 16) < 16) and (
+                if (playerX - (iCol * 16) < 16) and (
+                        playerX - (iCol * 16) > -16) and (
+                        playerY - (iRow * 16) < 16) and (
                         playerY - (iRow * 16) > -16):
                     # check the offending tile ID
                     result = thisLevel.GetMapTile((iRow, iCol))
@@ -1061,6 +1065,7 @@ class level():
 
                     elif result == tileID['pellet-power']:
                         # got a power pellet
+                        thisGame.SetMode(9)
                         thisLevel.SetMapTile((iRow, iCol), 0)
                         snd_powerpellet.play()
 
@@ -1144,8 +1149,6 @@ class level():
             for col in range(0, self.lvlWidth, 1):
                 outputLine += str(self.GetMapTile((row, col))) + ", "
 
-            # print outputLine
-
     def DrawMap(self):
         self.powerPelletBlinkTimer += 1
         if self.powerPelletBlinkTimer == 60:
@@ -1186,9 +1189,6 @@ class level():
         self.pellets = 0
 
         f = open(os.path.join(SCRIPT_PATH, "res", "levels", str(levelNum) + ".txt"), 'r')
-        # ANDY -- edit this
-        # fileOutput = f.read()
-        # str_splitByLine = fileOutput.split('\n')
         lineNum = -1
         rowNum = 0
         useLine = False
@@ -1265,7 +1265,7 @@ class level():
 
                 elif firstWord == "endleveldata":
                     isReadingLevelData = False
-                    # print "Level data has ended"
+            # print "Level data has ended"
 
             else:
                 useLine = True
@@ -1321,7 +1321,6 @@ class level():
     def Restart(self):
         for i in range(0, 4, 1):
             # move ghosts back to home
-
             ghosts[i].x = ghosts[i].homeX
             ghosts[i].y = ghosts[i].homeY
             ghosts[i].velX = 0
@@ -1361,26 +1360,26 @@ def CheckIfCloseButton(events):
 
 
 def CheckInputs():
-    if thisGame.mode == 1:
-        if pygame.key.get_pressed()[pygame.K_RIGHT] or (js != None and js.get_axis(JS_XAXIS) > 0):
+    if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
+        if pygame.key.get_pressed()[pygame.K_RIGHT] or (js is not None and js.get_axis(JS_XAXIS) > 0):
             if not thisLevel.CheckIfHitWall((player.x + player.speed, player.y),
                                             (player.nearestRow, player.nearestCol)):
                 player.velX = player.speed
                 player.velY = 0
 
-        elif pygame.key.get_pressed()[pygame.K_LEFT] or (js != None and js.get_axis(JS_XAXIS) < 0):
+        elif pygame.key.get_pressed()[pygame.K_LEFT] or (js is not None and js.get_axis(JS_XAXIS) < 0):
             if not thisLevel.CheckIfHitWall((player.x - player.speed, player.y),
                                             (player.nearestRow, player.nearestCol)):
                 player.velX = -player.speed
                 player.velY = 0
 
-        elif pygame.key.get_pressed()[pygame.K_DOWN] or (js != None and js.get_axis(JS_YAXIS) > 0):
+        elif pygame.key.get_pressed()[pygame.K_DOWN] or (js is not None and js.get_axis(JS_YAXIS) > 0):
             if not thisLevel.CheckIfHitWall((player.x, player.y + player.speed),
                                             (player.nearestRow, player.nearestCol)):
                 player.velX = 0
                 player.velY = player.speed
 
-        elif pygame.key.get_pressed()[pygame.K_UP] or (js != None and js.get_axis(JS_YAXIS) < 0):
+        elif pygame.key.get_pressed()[pygame.K_UP] or (js is not None and js.get_axis(JS_YAXIS) < 0):
             if not thisLevel.CheckIfHitWall((player.x, player.y - player.speed),
                                             (player.nearestRow, player.nearestCol)):
                 player.velX = 0
@@ -1399,9 +1398,6 @@ def CheckInputs():
 
 def GetCrossRef():
     f = open(os.path.join(SCRIPT_PATH, "res", "crossref.txt"), 'r')
-    # ANDY -- edit
-    # fileOutput = f.read()
-    # str_splitByLine = fileOutput.split('\n')
 
     lineNum = 0
     useLine = False
@@ -1500,23 +1496,33 @@ if pygame.joystick.get_count() > 0:
 else:
     js = None
 
-while True:
+# game "mode" variable
+# 0 = ready to level start
+# 1 = normal
+# 2 = hit ghost
+# 3 = game over
+# 4 = wait to start
+# 5 = wait after eating ghost
+# 6 = wait after finishing level
+# 7 = flashing maze after finishing level
+# 8 = extra pacman, small ghost mode
+# 9 = changed ghost to glasses
+# 10 = blank screen before changing levels
 
+while True:
     CheckIfCloseButton(pygame.event.get())
     if thisGame.mode == 0:
-        # ready to the first level start
+        # ready to level start
         thisGame.modeTimer += 1
 
-        if not channel_beginning.get_busy():
-            channel_beginning.play(snd_beginning)
-        elif thisGame.modeTimer == 160:
-            thisGame.SetMode(4)
+        if thisGame.modeTimer == 238:
+            thisGame.SetMode(1)
 
-    elif thisGame.mode == 1:
+    if thisGame.mode == 1:
         # normal gameplay mode
         CheckInputs()
-
         thisGame.modeTimer += 1
+
         player.Move()
         for i in range(0, 4, 1):
             ghosts[i].Move()
@@ -1554,7 +1560,7 @@ while True:
         thisGame.modeTimer += 1
 
         if thisGame.modeTimer == 30:
-            thisGame.SetMode(1)
+            thisGame.SetMode(8)
 
     elif thisGame.mode == 6:
         # pause after eating all the pellets
@@ -1575,8 +1581,8 @@ while True:
 
         if not whiteSet.count(thisGame.modeTimer) == 0:
             # member of white set
-            thisLevel.edgeLightColor = (255, 255, 255, 255)
-            thisLevel.edgeShadowColor = (255, 255, 255, 255)
+            thisLevel.edgeLightColor = (255, 255, 254, 255)
+            thisLevel.edgeShadowColor = (255, 255, 254, 255)
             thisLevel.fillColor = (0, 0, 0, 255)
             GetCrossRef()
         elif not normalSet.count(thisGame.modeTimer) == 0:
@@ -1586,9 +1592,45 @@ while True:
             thisLevel.fillColor = oldFillColor
             GetCrossRef()
         elif thisGame.modeTimer == 150:
-            thisGame.SetMode(8)
+            thisGame.SetMode(10)
 
     elif thisGame.mode == 8:
+        CheckInputs()
+        ghostState = 1
+        thisGame.modeTimer += 1
+
+        player.Move()
+
+        for i in range(0, 4, 1):
+            ghosts[i].Move()
+
+        for i in range(0, 4, 1):
+            if ghosts[i].state == 3:
+                ghostState = 3
+                break
+            elif ghosts[i].state == 2:
+                ghostState = 2
+
+        if thisLevel.pellets == 0:
+            # WON THE LEVEL
+            thisGame.SetMode(6)
+        elif ghostState == 1:
+            thisGame.SetMode(1)
+        elif ghostState == 2:
+            thisGame.SetMode(9)
+
+        thisFruit.Move()
+
+    elif thisGame.mode == 9:
+        CheckInputs()
+        thisGame.modeTimer += 1
+
+        player.Move()
+        for i in range(0, 4, 1):
+            ghosts[i].Move()
+        thisFruit.Move()
+
+    elif thisGame.mode == 10:
         # blank screen before changing levels
         thisGame.modeTimer += 1
         if thisGame.modeTimer == 10:
@@ -1598,7 +1640,7 @@ while True:
 
     screen.blit(img_Background, (0, 0))
 
-    if not thisGame.mode == 8:
+    if not thisGame.mode == 10:
         thisLevel.DrawMap()
 
         if thisGame.fruitScoreTimer > 0:
