@@ -1225,7 +1225,6 @@ class level():
 
     def LoadLevel(self, levelNum):
         self.map = {}
-
         self.pellets = 0
 
         f = open(os.path.join(SCRIPT_PATH, "res", "levels", str(levelNum) + ".txt"), 'r')
@@ -1339,7 +1338,7 @@ class level():
                             self.pellets += 1
 
                     rowNum += 1
-
+        f.close()
         # reload all tiles and set appropriate colors
         GetCrossRef()
 
@@ -1488,7 +1487,7 @@ def GetCrossRef():
                         tileIDImage[thisID].set_at((x, y), thisLevel.pelletColor)
 
         lineNum += 1
-
+    f.close()
 
 #      __________________
 # ___/  main code block  \_____________________________________________________
