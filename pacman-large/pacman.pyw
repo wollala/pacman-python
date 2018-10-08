@@ -207,12 +207,12 @@ class game():
         self.SetMode(3)
 
         # camera variables
+        self.screenTileSize = (23, 30)
+        self.screenSize = (self.screenTileSize[1] * TILE_WIDTH, self.screenTileSize[0] * TILE_HEIGHT)
+
         self.screenPixelPos = (0, 0)  # absolute x,y position of the screen from the upper-left corner of the level
         self.screenNearestTilePos = (0, 0)  # nearest-tile position of the screen from the UL corner
         self.screenPixelOffset = (0, 0)  # offset in pixels of the screen from its nearest-tile position
-
-        self.screenTileSize = (23, 21)
-        self.screenSize = (self.screenTileSize[1] * TILE_WIDTH, self.screenTileSize[0] * TILE_HEIGHT)
 
         # numerical display digits
         self.digit = {}
@@ -270,14 +270,18 @@ class game():
         possibleScreenX = player.x - self.screenTileSize[1] / 2 * TILE_WIDTH
         possibleScreenY = player.y - self.screenTileSize[0] / 2 * TILE_HEIGHT
 
-        if possibleScreenX < 0:
+        if self.screenSize[0] >= thisLevel.lvlWidth * TILE_WIDTH:
+            possibleScreenX = -(self.screenSize[0] - thisLevel.lvlWidth * TILE_WIDTH) / 2
+        elif possibleScreenX < 0:
             possibleScreenX = 0
         elif possibleScreenX > thisLevel.lvlWidth * TILE_WIDTH - self.screenSize[0]:
-            possibleScreenX = thisLevel.lvlWidth * TILE_HEIGHT - self.screenSize[0]
+            possibleScreenX = thisLevel.lvlWidth * TILE_WIDTH - self.screenSize[0]
 
-        if possibleScreenY < 0:
+        if self.screenSize[1] >= thisLevel.lvlHeight * TILE_HEIGHT:
+            possibleScreenY = -(self.screenSize[1] - thisLevel.lvlHeight * TILE_HEIGHT) / 2
+        elif possibleScreenY < 0:
             possibleScreenY = 0
-        elif possibleScreenY > thisLevel.lvlHeight * TILE_WIDTH - self.screenSize[1]:
+        elif possibleScreenY > thisLevel.lvlHeight * TILE_HEIGHT - self.screenSize[1]:
             possibleScreenY = thisLevel.lvlHeight * TILE_HEIGHT - self.screenSize[1]
 
         thisGame.MoveScreen((possibleScreenX, possibleScreenY))
@@ -1210,9 +1214,9 @@ class level():
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
 
-        for row in range(-1, thisGame.screenTileSize[0] + 1, 1):
+        for row in range(-1, thisGame.screenTileSize[0] + TILE_HEIGHT + 1, 1):
             outputLine = ""
-            for col in range(-1, thisGame.screenTileSize[1] + 1, 1):
+            for col in range(-1, thisGame.screenTileSize[1] + TILE_WIDTH + 1, 1):
 
                 # row containing tile that actually goes here
                 actualRow = thisGame.screenNearestTilePos[0] + row
@@ -1377,7 +1381,6 @@ class level():
     def Restart(self):
         for i in range(0, 4, 1):
             # move ghosts back to home
-
             ghosts[i].x = ghosts[i].homeX
             ghosts[i].y = ghosts[i].homeY
             ghosts[i].velX = 0
@@ -1424,19 +1427,19 @@ def CheckInputs():
                 player.velX = player.speed
                 player.velY = 0
 
-        elif pygame.key.get_pressed()[pygame.K_LEFT] or (js != None and js.get_axis(JS_XAXIS) < -0.5):
+        elif pygame.key.get_pressed()[pygame.K_LEFT] or (js is not None and js.get_axis(JS_XAXIS) < -0.5):
             if not (player.velX == -player.speed and player.velY == 0) and not thisLevel.CheckIfHitWall(
                     (player.x - player.speed, player.y), (player.nearestRow, player.nearestCol)):
                 player.velX = -player.speed
                 player.velY = 0
 
-        elif pygame.key.get_pressed()[pygame.K_DOWN] or (js != None and js.get_axis(JS_YAXIS) > 0.5):
+        elif pygame.key.get_pressed()[pygame.K_DOWN] or (js is not None and js.get_axis(JS_YAXIS) > 0.5):
             if not (player.velX == 0 and player.velY == player.speed) and not thisLevel.CheckIfHitWall(
                     (player.x, player.y + player.speed), (player.nearestRow, player.nearestCol)):
                 player.velX = 0
                 player.velY = player.speed
 
-        elif pygame.key.get_pressed()[pygame.K_UP] or (js != None and js.get_axis(JS_YAXIS) < -0.5):
+        elif pygame.key.get_pressed()[pygame.K_UP] or (js is not None and js.get_axis(JS_YAXIS) < -0.5):
             if not (player.velX == 0 and player.velY == -player.speed) and not thisLevel.CheckIfHitWall(
                     (player.x, player.y - player.speed), (player.nearestRow, player.nearestCol)):
                 player.velX = 0
@@ -1536,6 +1539,7 @@ thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
 window = pygame.display.set_mode(thisGame.screenSize, pygame.HWSURFACE | pygame.DOUBLEBUF)
+print("scrrenSize: " ,thisGame.screenSize)
 
 # initialise the joystick
 if pygame.joystick.get_count() > 0:
