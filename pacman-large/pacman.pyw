@@ -597,23 +597,23 @@ class ghost():
         # ghost eyes --
         for y in range(6, 12, 1):
             for x in [5, 6, 8, 9]:
-                self.anim[self.animFrame].set_at((x, y), (0xf8, 0xf8, 0xf8, 255))
-                self.anim[self.animFrame].set_at((x + 9, y), (0xf8, 0xf8, 0xf8, 255))
+                self.anim[self.animFrame].set_at((x, y), (248, 248, 248, 255))
+                self.anim[self.animFrame].set_at((x + 9, y), (248, 248, 248, 255))
 
-        if player.x > self.x and player.y > self.y:
-            # player is to lower-right
-            pupilSet = (8, 9)
-        elif player.x < self.x and player.y > self.y:
-            # player is to lower-left
-            pupilSet = (5, 9)
-        elif player.x > self.x and player.y < self.y:
-            # player is to upper-right
-            pupilSet = (8, 6)
-        elif player.x < self.x and player.y < self.y:
-            # player is to upper-left
-            pupilSet = (5, 6)
-        else:
-            pupilSet = (5, 9)
+                if player.x > self.x and player.y > self.y:
+                    # player is to lower-right
+                    pupilSet = (8, 9)
+                elif player.x < self.x and player.y > self.y:
+                    # player is to lower-left
+                    pupilSet = (5, 9)
+                elif player.x > self.x and player.y < self.y:
+                    # player is to upper-right
+                    pupilSet = (8, 6)
+                elif player.x < self.x and player.y < self.y:
+                    # player is to upper-left
+                    pupilSet = (5, 6)
+                else:
+                    pupilSet = (5, 9)
 
         for y in range(pupilSet[1], pupilSet[1] + 3, 1):
             for x in range(pupilSet[0], pupilSet[0] + 2, 1):
@@ -1194,9 +1194,9 @@ class level():
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
 
-        for row in range(-1, thisGame.screenTileSize[0] + TILE_HEIGHT + 1, 1):
+        for row in range(-1, thisGame.screenTileSize[0] + 1, 1):
             outputLine = ""
-            for col in range(-1, thisGame.screenTileSize[1] + TILE_WIDTH + 1, 1):
+            for col in range(-1, thisGame.screenTileSize[1] + 1, 1):
 
                 # row containing tile that actually goes here
                 actualRow = thisGame.screenNearestTilePos[0] + row

@@ -183,7 +183,7 @@ class game():
         self.SetMode(3)
 
         # camera variables
-        self.screenTileSize = (23, 21)
+        self.screenTileSize = (23, 30)
         self.screenSize = (self.screenTileSize[1] * 16, self.screenTileSize[0] * 16)
 
         self.screenPixelPos = (0, 0)  # absolute x,y position of the screen from the upper-left corner of the level
@@ -610,7 +610,7 @@ class ghost():
             for x in range(pupilSet[0], pupilSet[0] + 2, 1):
                 self.anim[self.animFrame].set_at((x, y), (0, 0, 255, 255))
                 self.anim[self.animFrame].set_at((x + 6, y), (0, 0, 255, 255))
-                # -- end ghost eyes
+        # -- end ghost eyes
 
         if self.state == 1:
             # draw regular ghost (this one)
