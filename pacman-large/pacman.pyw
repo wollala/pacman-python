@@ -10,6 +10,9 @@ from pygame.locals import *
 # WIN???
 SCRIPT_PATH = sys.path[0]
 
+SCREEN_TILE_SIZE_HEIGHT = 23
+SCREEN_TILE_SIZE_WIDTH = 30
+
 TILE_WIDTH = TILE_HEIGHT = 24
 
 # constants for the high-score display
@@ -83,6 +86,7 @@ ghostcolor[3] = (255, 128, 0, 255)
 ghostcolor[4] = (50, 50, 255, 255)  # blue, vulnerable ghost
 ghostcolor[5] = (255, 255, 255, 255)  # white, flashing ghost
 
+rect_list = [] # rect list for drawing
 
 #      ___________________
 # ___/  class definitions  \_______________________________________________
@@ -155,19 +159,20 @@ class game():
         self.writehiscores(hs)
 
     def makehiscorelist(self):
+        global rect_list
         "Read the High-Score file and convert it to a useable Surface."
         # My apologies for all the hard-coded constants.... -Andy
         f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
         scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
         scoresurf.set_alpha(HS_ALPHA)
         linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
-        scoresurf.blit(linesurf, (0, 0))
+        rect_list.append(scoresurf.blit(linesurf, (0, 0)))
         hs = self.gethiscores()
         vpos = 0
         for line in hs:
             vpos += HS_LINE_HEIGHT
             linesurf = f.render(line[1].rjust(22) + str(line[0]).rjust(9), 1, (255, 255, 255))
-            scoresurf.blit(linesurf, (0, vpos))
+            rect_list.append(scoresurf.blit(linesurf, (0, vpos)))
         return scoresurf
 
     def drawmidgamehiscores(self):
@@ -190,7 +195,7 @@ class game():
         self.SetMode(3)
 
         # camera variables
-        self.screenTileSize = (23, 30)
+        self.screenTileSize = (SCREEN_TILE_SIZE_HEIGHT, SCREEN_TILE_SIZE_WIDTH)
         self.screenSize = (self.screenTileSize[1] * TILE_WIDTH, self.screenTileSize[0] * TILE_HEIGHT)
 
         self.screenPixelPos = (0, 0)  # absolute x,y position of the screen from the upper-left corner of the level
@@ -226,28 +231,33 @@ class game():
         self.score += amount
 
     def DrawScore(self):
+        global rect_list
         self.DrawNumber(self.score, (SCORE_XOFFSET, self.screenSize[1] - SCORE_YOFFSET))
 
         for i in range(0, self.lives, 1):
-            screen.blit(self.imLife, (34 + i * 10 + 16, self.screenSize[1] - 18))
+            rect_list.append(screen.blit(self.imLife, (34 + i * 10 + 16, self.screenSize[1] - 18)))
 
-        screen.blit(thisFruit.imFruit[thisFruit.fruitType], (4 + 16, self.screenSize[1] - 28))
+        rect_list.append(screen.blit(thisFruit.imFruit[thisFruit.fruitType], (4 + 16, self.screenSize[1] - 28)))
 
         if self.mode == 3:
-            screen.blit(self.imGameOver, (self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2),
-                                          self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2)))
+            rect_list.append(screen.blit(self.imGameOver, (self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2),
+                                          self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2))))
         elif self.mode == 0 or self.mode == 4:
-            screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12))
+            rect_list.append(screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12)))
 
         self.DrawNumber(self.levelNum, (0, self.screenSize[1] - 20))
 
     def DrawNumber(self, number, x_y):
+        global rect_list
         (x, y) = x_y
+
         strNumber = str(number)
 
         for i in range(0, len(str(number)), 1):
+            if strNumber[i] == '.':
+                break
             iDigit = int(strNumber[i])
-            screen.blit(self.digit[iDigit], (x + i * SCORE_COLWIDTH, y))
+            rect_list.append(screen.blit(self.digit[iDigit], (x + i * SCORE_COLWIDTH, y)))
 
     def SmartMoveScreen(self):
         possibleScreenX = player.x - self.screenTileSize[1] / 2 * TILE_WIDTH
@@ -544,10 +554,11 @@ class path_finder():
         return self.map[self.Unfold((row, col))].parent
 
     def draw(self):
+        global rect_list
         for row in range(0, self.size[0], 1):
             for col in range(0, self.size[1], 1):
                 thisTile = self.GetType((row, col))
-                screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2)))
+                rect_list.append(screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2))))
 
 
 class ghost():
@@ -591,6 +602,7 @@ class ghost():
         self.animDelay = 0
 
     def Draw(self):
+        global rect_list
         if thisGame.mode == 3:
             return False
 
@@ -623,29 +635,29 @@ class ghost():
 
         if self.state == 1:
             # draw regular ghost (this one)
-            screen.blit(self.anim[self.animFrame],
-                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+            rect_list.append(screen.blit(self.anim[self.animFrame],
+                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
         elif self.state == 2:
             # draw vulnerable ghost
 
             if thisGame.ghostTimer > 100:
                 # blue
-                screen.blit(ghosts[4].anim[self.animFrame],
-                            (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+                rect_list.append(screen.blit(ghosts[4].anim[self.animFrame],
+                            (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
             else:
                 # blue/white flashing
                 tempTimerI = int(thisGame.ghostTimer / 10)
                 if tempTimerI == 1 or tempTimerI == 3 or tempTimerI == 5 or tempTimerI == 7 or tempTimerI == 9:
-                    screen.blit(ghosts[5].anim[self.animFrame],
-                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+                    rect_list.append(screen.blit(ghosts[5].anim[self.animFrame],
+                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
                 else:
-                    screen.blit(ghosts[4].anim[self.animFrame],
-                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+                    rect_list.append(screen.blit(ghosts[4].anim[self.animFrame],
+                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
 
         elif self.state == 3:
             # draw glasses
-            screen.blit(tileIDImage[tileID['glasses']],
-                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+            rect_list.append(screen.blit(tileIDImage[tileID['glasses']],
+                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
 
         if thisGame.mode == 6 or thisGame.mode == 7:
             # don't animate ghost if the level is complete
@@ -752,11 +764,12 @@ class fruit():
         self.fruitType = 1
 
     def Draw(self):
+        global rect_list
         if thisGame.mode == 3 or self.active == False:
             return False
 
-        screen.blit(self.imFruit[self.fruitType],
-                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1] - self.bounceY))
+        rect_list.append(screen.blit(self.imFruit[self.fruitType],
+                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1] - self.bounceY)))
 
     def Move(self):
         if self.active == False:
@@ -959,6 +972,7 @@ class pacman():
             thisGame.fruitScoreTimer -= 1
 
     def Draw(self):
+        global rect_list
         if thisGame.mode == 3:
             return False
 
@@ -972,11 +986,11 @@ class pacman():
         elif self.velY < 0:
             self.anim_pacmanCurrent = self.anim_pacmanU
 
-        screen.blit(self.anim_pacmanCurrent[self.animFrame],
-                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
+        rect_list.append(screen.blit(self.anim_pacmanCurrent[self.animFrame],
+                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
 
         if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
-            if not self.velX == 0 or not self.velY == 0:
+            if self.velX != 0 or self.velY != 0:
                 # only Move mouth when pacman is moving
                 self.animFrame += 1
 
@@ -1190,12 +1204,12 @@ class level():
                 outputLine += str(self.GetMapTile((row, col))) + ", "
 
     def DrawMap(self):
+        global rect_list
         self.powerPelletBlinkTimer += 1
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
 
         for row in range(-1, thisGame.screenTileSize[0] + 1, 1):
-            outputLine = ""
             for col in range(-1, thisGame.screenTileSize[1] + 1, 1):
 
                 # row containing tile that actually goes here
@@ -1203,25 +1217,24 @@ class level():
                 actualCol = thisGame.screenNearestTilePos[1] + col
 
                 useTile = self.GetMapTile((actualRow, actualCol))
-                if not useTile == 0 and not useTile == tileID['door-h'] and not useTile == tileID['door-v']:
+                if useTile != 0 and useTile != tileID['door-h'] and useTile != tileID['door-v']:
                     # if this isn't a blank tile
-
                     if useTile == tileID['pellet-power']:
                         if self.powerPelletBlinkTimer < 30:
-                            screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                               row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                            rect_list.append(screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                               row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
 
                     elif useTile == tileID['showlogo']:
-                        screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                      row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        rect_list.append(screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                      row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
 
                     elif useTile == tileID['hiscores']:
-                        screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                          row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        rect_list.append(screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                          row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
 
                     else:
-                        screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                           row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        rect_list.append(screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                           row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
 
     def LoadLevel(self, levelNum):
         self.map = {}
@@ -1510,7 +1523,6 @@ thisFruit = fruit()
 tileIDName = {}  # gives tile name (when the ID# is known)
 tileID = {}  # gives tile ID (when the name is known)
 tileIDImage = {}  # gives tile image (when the ID# is known)
-
 oldEdgeLightColor = None
 oldEdgeShadowColor = None
 oldFillColor = None
@@ -1520,7 +1532,8 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-window = pygame.display.set_mode(thisGame.screenSize, pygame.DOUBLEBUF | pygame.HWSURFACE)
+#window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
+window = pygame.display.set_mode(thisGame.screenSize)
 
 # initialise the joystick
 if pygame.joystick.get_count() > 0:
@@ -1674,7 +1687,7 @@ while True:
 
     thisGame.SmartMoveScreen()
 
-    screen.blit(img_Background, (0, 0))
+    rect_list.append(screen.blit(img_Background, (0, 0)))
 
     if not thisGame.mode == 10:
         thisLevel.DrawMap()
@@ -1690,7 +1703,7 @@ while True:
         player.Draw()
 
         if thisGame.mode == 3:
-            screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET))
+            rect_list.append(screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET)))
 
     if thisGame.mode == 5:
         thisGame.DrawNumber(thisGame.ghostValue / 2,
@@ -1698,6 +1711,6 @@ while True:
 
     thisGame.DrawScore()
 
-    pygame.display.flip()
-
+    pygame.display.update(rect_list)
+    del rect_list[:]
     clock.tick(60)
