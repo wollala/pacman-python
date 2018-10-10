@@ -64,9 +64,9 @@ screen = pygame.display.get_surface()
 
 img_Background = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif")).convert()
 
-snd_pellet = {}
-snd_pellet[0] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav"))
-snd_pellet[1] = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))
+snd_pellet = {
+    0: pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav")),
+    1: pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))}
 snd_levelintro = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "levelintro.wav"))
 snd_default = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
 snd_extrapac = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extrapac.wav"))
@@ -78,106 +78,20 @@ snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", 
 snd_eatfruit = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatfruit.wav"))
 snd_extralife = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extralife.wav"))
 
-ghostcolor = {}
-ghostcolor[0] = (255, 0, 0, 255)
-ghostcolor[1] = (255, 128, 255, 255)
-ghostcolor[2] = (128, 255, 255, 255)
-ghostcolor[3] = (255, 128, 0, 255)
-ghostcolor[4] = (50, 50, 255, 255)  # blue, vulnerable ghost
-ghostcolor[5] = (255, 255, 255, 255)  # white, flashing ghost
+ghostcolor = {
+    0: (255, 0, 0, 255),
+    1: (255, 128, 255, 255),
+    2: (128, 255, 255, 255),
+    3: (255, 128, 0, 255),
+    4: (50, 50, 255, 255),
+    5: (255, 255, 255, 255)}
 
 rect_list = [] # rect list for drawing
 
 #      ___________________
 # ___/  class definitions  \_______________________________________________
 
-class game():
-    def defaulthiscorelist(self):
-        return [(100000, "David"), (80000, "Andy"), (60000, "Count Pacula"), (40000, "Cleopacra"),
-                (20000, "Brett Favre"), (10000, "Sergei Pachmaninoff")]
-
-    def gethiscores(self):
-        """If res/hiscore.txt exists, read it. If not, return the default high scores.
-           Output is [ (score,name) , (score,name) , .. ]. Always 6 entries."""
-        try:
-            f = open(os.path.join(SCRIPT_PATH, "res", "hiscore.txt"))
-            hs = []
-            for line in f:
-                while len(line) > 0 and (line[0] == "\n" or line[0] == "\r"):
-                    line = line[1:]
-                while len(line) > 0 and (line[-1] == "\n" or line[-1] == "\r"):
-                    line = line[:-1]
-                score = int(line.split(" ")[0])
-                name = line.partition(" ")[2]
-                if score > 99999999: score = 99999999
-                if len(name) > 22: name = name[:22]
-                hs.append((score, name))
-            f.close()
-            if len(hs) > 6: hs = hs[:6]
-            while len(hs) < 6: hs.append((0, ""))
-            return hs
-        except IOError:
-            return self.defaulthiscorelist()
-
-    def writehiscores(self, hs):
-        """Given a new list, write it to the default file."""
-        fname = os.path.join(SCRIPT_PATH, "res", "hiscore.txt")
-        f = open(fname, "w")
-        for line in hs:
-            f.write(str(line[0]) + " " + line[1] + "\n")
-        f.close()
-
-    def getplayername(self):
-        """Ask the player his name, to go on the high-score list."""
-        if NO_WX: return USER_NAME
-        try:
-            import wx
-        except:
-            print()
-            "Pacman Error: No module wx. Can not ask the user his name!"
-            print()
-            "     :(       Download wx from http://www.wxpython.org/"
-            print()
-            "     :(       To avoid seeing this error again, set NO_WX in file pacman.pyw."
-            return USER_NAME
-        app = wx.App(None)
-        dlog = wx.TextEntryDialog(None, "You made the high-score list! Name:")
-        dlog.ShowModal()
-        name = dlog.GetValue()
-        dlog.Destroy()
-        app.Destroy()
-        return name
-
-    def updatehiscores(self, newscore):
-        """Add newscore to the high score list, if appropriate."""
-        hs = self.gethiscores()
-        for line in hs:
-            if newscore >= line[0]:
-                hs.insert(hs.index(line), (newscore, self.getplayername()))
-                hs.pop(-1)
-                break
-        self.writehiscores(hs)
-
-    def makehiscorelist(self):
-        global rect_list
-        "Read the High-Score file and convert it to a useable Surface."
-        # My apologies for all the hard-coded constants.... -Andy
-        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
-        scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
-        scoresurf.set_alpha(HS_ALPHA)
-        linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
-        rect_list.append(scoresurf.blit(linesurf, (0, 0)))
-        hs = self.gethiscores()
-        vpos = 0
-        for line in hs:
-            vpos += HS_LINE_HEIGHT
-            linesurf = f.render(line[1].rjust(22) + str(line[0]).rjust(9), 1, (255, 255, 255))
-            rect_list.append(scoresurf.blit(linesurf, (0, vpos)))
-        return scoresurf
-
-    def drawmidgamehiscores(self):
-        """Redraw the high-score list image after pacman dies."""
-        self.imHiscores = self.makehiscorelist()
+class game:
 
     def __init__(self):
         self.levelNum = 0
@@ -212,6 +126,100 @@ class game():
         self.imLogo = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif")).convert()
         self.imHiscores = self.makehiscorelist()
 
+    @staticmethod
+    def defaulthiscorelist():
+        return [(100000, "David"), (80000, "Andy"), (60000, "Count Pacula"), (40000, "Cleopacra"),
+                (20000, "Brett Favre"), (10000, "Sergei Pachmaninoff")]
+
+    @staticmethod
+    def writehiscores(hs):
+        """Given a new list, write it to the default file."""
+        fname = os.path.join(SCRIPT_PATH, "res", "hiscore.txt")
+        f = open(fname, "w")
+        for line in hs:
+            f.write(str(line[0]) + " " + line[1] + "\n")
+        f.close()
+
+    @staticmethod
+    def getplayername():
+        """Ask the player his name, to go on the high-score list."""
+        if NO_WX:
+            return USER_NAME
+        # noinspection PyBroadException
+        try:
+            import wx
+        except:
+            print("""Pacman Error: No module wx. Can not ask the user his name!
+                     :(       Download wx from http://www.wxpython.org/"
+                     :(       To avoid seeing this error again, set NO_WX in file pacman.pyw.""")
+            return USER_NAME
+        app = wx.App(None)
+        dlog = wx.TextEntryDialog(None, "You made the high-score list! Name:")
+        dlog.ShowModal()
+        name = dlog.GetValue()
+        dlog.Destroy()
+        app.Destroy()
+        return name
+
+    @staticmethod
+    def PlayBackgoundSound(snd):
+        channel_backgound.stop()
+        channel_backgound.play(snd, loops=-1)
+
+    def gethiscores(self):
+        """If res/hiscore.txt exists, read it. If not, return the default high scores.
+           Output is [ (score,name) , (score,name) , .. ]. Always 6 entries."""
+        try:
+            f = open(os.path.join(SCRIPT_PATH, "res", "hiscore.txt"))
+            hs = []
+            for line in f:
+                while len(line) > 0 and (line[0] == "\n" or line[0] == "\r"):
+                    line = line[1:]
+                while len(line) > 0 and (line[-1] == "\n" or line[-1] == "\r"):
+                    line = line[:-1]
+                score = int(line.split(" ")[0])
+                name = line.partition(" ")[2]
+                if score > 99999999: score = 99999999
+                if len(name) > 22: name = name[:22]
+                hs.append((score, name))
+            f.close()
+            if len(hs) > 6: hs = hs[:6]
+            while len(hs) < 6: hs.append((0, ""))
+            return hs
+        except IOError:
+            return self.defaulthiscorelist()
+
+    def updatehiscores(self, newscore):
+        """Add newscore to the high score list, if appropriate."""
+        hs = self.gethiscores()
+        for line in hs:
+            if newscore >= line[0]:
+                hs.insert(hs.index(line), (newscore, self.getplayername()))
+                hs.pop(-1)
+                break
+        self.writehiscores(hs)
+
+    def makehiscorelist(self):
+        global rect_list
+        "Read the High-Score file and convert it to a useable Surface."
+        # My apologies for all the hard-coded constants.... -Andy
+        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
+        scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
+        scoresurf.set_alpha(HS_ALPHA)
+        linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
+        rect_list.append(scoresurf.blit(linesurf, (0, 0)))
+        hs = self.gethiscores()
+        vpos = 0
+        for line in hs:
+            vpos += HS_LINE_HEIGHT
+            linesurf = f.render(line[1].rjust(22) + str(line[0]).rjust(9), 1, (255, 255, 255))
+            rect_list.append(scoresurf.blit(linesurf, (0, vpos)))
+        return scoresurf
+
+    def drawmidgamehiscores(self):
+        """Redraw the high-score list image after pacman dies."""
+        self.imHiscores = self.makehiscorelist()
+
     def StartNewGame(self):
         self.levelNum = 1
         self.score = 0
@@ -224,7 +232,7 @@ class game():
         extraLifeSet = [25000, 50000, 100000, 150000]
 
         for specialScore in extraLifeSet:
-            if self.score < specialScore and self.score + amount >= specialScore:
+            if self.score < specialScore <= self.score + amount:
                 snd_extralife.play()
                 thisGame.lives += 1
 
@@ -303,10 +311,6 @@ class game():
         player.velY = 0
         player.anim_pacmanCurrent = player.anim_pacmanS
 
-    def PlayBackgoundSound(self, snd):
-        channel_backgound.stop()
-        channel_backgound.play(snd, loops=-1)
-
     def SetMode(self, newMode):
         self.mode = newMode
         self.modeTimer = 0
@@ -324,7 +328,7 @@ class game():
         else:
             channel_backgound.stop()
 
-class node():
+class node:
     def __init__(self):
         self.g = -1  # movement cost to move from previous node to this one (usually +10)
         self.h = -1  # estimated movement cost to move from this node to the ending node (remaining horizontal and vertical steps * 10)
@@ -335,7 +339,7 @@ class node():
         self.type = -1
 
 
-class path_finder():
+class path_finder:
     def __init__(self):
         # map is a 1-DIMENSIONAL array.
         # use the Unfold( (row, col) ) function to convert a 2D coordinate pair
@@ -391,13 +395,13 @@ class path_finder():
         self.SetH(self.start, 0)
         self.SetF(self.start, 0)
 
+        thisLowestFNode = None
         doContinue = True
-
-        while (doContinue == True):
+        while doContinue:
 
             thisLowestFNode = self.GetLowestFNode()
 
-            if not thisLowestFNode == self.end and not thisLowestFNode == False:
+            if thisLowestFNode != self.end and thisLowestFNode != False:
                 self.current = thisLowestFNode
                 self.RemoveFromOpenList(self.current)
                 self.AddToClosedList(self.current)
@@ -561,7 +565,7 @@ class path_finder():
                 rect_list.append(screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2))))
 
 
-class ghost():
+class ghost:
     def __init__(self, ghostID):
         self.x = 0
         self.y = 0
@@ -603,6 +607,8 @@ class ghost():
 
     def Draw(self):
         global rect_list
+        pupilSet = None
+
         if thisGame.mode == 3:
             return False
 
@@ -738,7 +744,7 @@ class ghost():
                     self.FollowNextPathWay()
 
 
-class fruit():
+class fruit:
     def __init__(self):
         # when fruit is not in use, it's in the (-1, -1) position off-screen.
         self.slowTimer = 0
@@ -772,7 +778,7 @@ class fruit():
                     (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1] - self.bounceY)))
 
     def Move(self):
-        if self.active == False:
+        if not self.active:
             return False
 
         self.bouncei += 1
@@ -847,7 +853,7 @@ class fruit():
                     (self.velX, self.velY) = (0, self.speed)
 
 
-class pacman():
+class pacman:
     def __init__(self):
         self.x = 0
         self.y = 0
@@ -867,6 +873,8 @@ class pacman():
         self.anim_pacmanD = {}
         self.anim_pacmanS = {}
         self.anim_pacmanCurrent = {}
+
+        self.animFrame = 1
 
         for i in range(1, 9, 1):
             self.anim_pacmanL[i] = pygame.image.load(
@@ -924,7 +932,7 @@ class pacman():
                         thisGame.SetMode(5)
 
             # check for collisions with the fruit
-            if thisFruit.active == True:
+            if thisFruit.active:
                 if thisLevel.CheckIfHit((self.x, self.y), (thisFruit.x, thisFruit.y), TILE_WIDTH / 2):
                     thisGame.AddToScore(2500)
                     thisFruit.active = False
@@ -946,7 +954,7 @@ class pacman():
                 for i in range(0, 4, 1):
                     if ghosts[i].state == 2:
                         ghosts[i].state = 1
-                self.ghostValue = 0
+                thisGame.ghostValue = 0
 
         # deal with fruit timer
         thisGame.fruitTimer += 1
@@ -999,7 +1007,7 @@ class pacman():
                 self.animFrame = 1
 
 
-class level():
+class level:
     def __init__(self):
         self.lvlWidth = 0
         self.lvlHeight = 0
@@ -1019,12 +1027,13 @@ class level():
 
     def GetMapTile(self, row_col):
         (row, col) = row_col
-        if row >= 0 and row < self.lvlHeight and col >= 0 and col < self.lvlWidth:
+        if 0 <= row < self.lvlHeight and 0 <= col < self.lvlWidth:
             return self.map[(row * self.lvlWidth) + col]
         else:
             return 0
 
-    def IsWall(self, row_col):
+    @staticmethod
+    def IsWall(row_col):
         (row, col) = row_col
         if row > thisLevel.lvlHeight - 1 or row < 0:
             return True
@@ -1036,7 +1045,7 @@ class level():
         result = thisLevel.GetMapTile((row, col))
 
         # if the tile was a wall
-        if result >= 100 and result <= 199:
+        if 100 <= result <= 199:
             return True
         else:
             return False
@@ -1063,7 +1072,8 @@ class level():
         else:
             return False
 
-    def CheckIfHit(self, playerX_playerY, x_y, cushion):
+    @staticmethod
+    def CheckIfHit(playerX_playerY, x_y, cushion):
         (playerX, playerY) = playerX_playerY
         (x, y) = x_y
         if (playerX - x < cushion) and (playerX - x > -cushion) and (playerY - y < cushion) and (
@@ -1072,7 +1082,8 @@ class level():
         else:
             return False
 
-    def CheckIfHitSomething(self, playerX_playerY, row_col):
+    @staticmethod
+    def CheckIfHitSomething(playerX_playerY, row_col):
         (playerX, playerY) = playerX_playerY
         (row, col) = row_col
         for iRow in range(row - 1, row + 2, 1):
@@ -1159,7 +1170,7 @@ class level():
         for row in range(0, self.lvlHeight, 1):
             for col in range(0, self.lvlWidth, 1):
                 if self.GetMapTile((row, col)) == tileID['ghost-door']:
-                    return (row, col)
+                    return row, col
 
         return False
 
@@ -1243,7 +1254,6 @@ class level():
         f = open(os.path.join(SCRIPT_PATH, "res", "levels", str(levelNum) + ".txt"), 'r')
         lineNum = -1
         rowNum = 0
-        useLine = False
         isReadingLevelData = False
 
         for line in f:
@@ -1257,7 +1267,7 @@ class level():
 
             j = str_splitBySpace[0]
 
-            if (j == "'" or j == ""):
+            if j == "'" or j == "":
                 # comment / whitespace line
                 # print " ignoring comment line.. "
                 useLine = False
@@ -1321,9 +1331,9 @@ class level():
                 useLine = True
 
             # this is a map data line
-            if useLine == True:
+            if useLine:
 
-                if isReadingLevelData == True:
+                if isReadingLevelData:
 
                     # print str( len(str_splitBySpace) ) + " tiles in this column"
 
@@ -1338,7 +1348,7 @@ class level():
                             player.homeY = rowNum * TILE_HEIGHT
                             self.SetMapTile((rowNum, k), 0)
 
-                        elif thisID >= 10 and thisID <= 13:
+                        elif 10 <= thisID <= 13:
                             # one of the ghosts
 
                             ghosts[thisID - 10].homeX = k * TILE_WIDTH
@@ -1439,7 +1449,7 @@ def CheckInputs():
         sys.exit(0)
 
     elif thisGame.mode == 3:
-        if pygame.key.get_pressed()[pygame.K_RETURN] or (js != None and js.get_button(JS_STARTBUTTON)):
+        if pygame.key.get_pressed()[pygame.K_RETURN] or (js is not None and js.get_button(JS_STARTBUTTON)):
             thisGame.StartNewGame()
 
 
@@ -1450,7 +1460,6 @@ def GetCrossRef():
     f = open(os.path.join(SCRIPT_PATH, "res", "crossref.txt"), 'r')
 
     lineNum = 0
-    useLine = False
 
     for i in f.readlines():
         # print " ========= Line " + str(lineNum) + " ============ "
@@ -1460,7 +1469,7 @@ def GetCrossRef():
 
         j = str_splitBySpace[0]
 
-        if (j == "'" or j == "" or j == "#"):
+        if j == "'" or j == "" or j == "#":
             # comment / whitespace line
             # print " ignoring comment line.. "
             useLine = False
@@ -1468,7 +1477,7 @@ def GetCrossRef():
             # print str(wordNum) + ". " + j
             useLine = True
 
-        if useLine == True:
+        if useLine:
             tileIDName[int(str_splitBySpace[0])] = str_splitBySpace[1]
             tileID[str_splitBySpace[1]] = int(str_splitBySpace[0])
 
