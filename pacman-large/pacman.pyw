@@ -4,7 +4,7 @@ import os
 import random
 import sys
 
-import pygame
+import pygame as pg
 from pygame.locals import *
 
 # WIN???
@@ -13,7 +13,8 @@ SCRIPT_PATH = sys.path[0]
 SCREEN_TILE_SIZE_HEIGHT = 23
 SCREEN_TILE_SIZE_WIDTH = 30
 
-TILE_WIDTH = TILE_HEIGHT = 24
+TILE_WIDTH = 24
+TILE_HEIGHT = 24
 
 # constants for the high-score display
 HS_FONT_SIZE = 14
@@ -49,34 +50,34 @@ JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
 # Must come before pygame.init()
-pygame.mixer.pre_init(22050, -16, 1, 1024)
-pygame.mixer.init()
-pygame.mixer.set_num_channels(7)
-channel_backgound = pygame.mixer.Channel(6)
+pg.mixer.pre_init(22050, -16, 1, 1024)
+pg.mixer.init()
+pg.mixer.set_num_channels(7)
+channel_backgound = pg.mixer.Channel(6)
 
-clock = pygame.time.Clock()
-pygame.init()
+clock = pg.time.Clock()
+pg.init()
 
-window = pygame.display.set_mode((1, 1))
-pygame.display.set_caption("Pacman")
+window = pg.display.set_mode((1, 1))
+pg.display.set_caption("Pacman")
 
-screen = pygame.display.get_surface()
+screen = pg.display.get_surface()
 
-img_Background = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif")).convert()
+img_Background = pg.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif")).convert()
 
 snd_pellet = {
-    0: pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav")),
-    1: pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))}
-snd_levelintro = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "levelintro.wav"))
-snd_default = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
-snd_extrapac = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extrapac.wav"))
-snd_gh2gohome = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "gh2gohome.wav"))
-snd_death = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "death.wav"))
-snd_powerpellet = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
-snd_eatgh = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
-snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
-snd_eatfruit = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatfruit.wav"))
-snd_extralife = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extralife.wav"))
+    0: pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav")),
+    1: pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))}
+snd_levelintro = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "levelintro.wav"))
+snd_default = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
+snd_extrapac = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extrapac.wav"))
+snd_gh2gohome = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "gh2gohome.wav"))
+snd_death = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "death.wav"))
+snd_powerpellet = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
+snd_eatgh = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
+snd_fruitbounce = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
+snd_eatfruit = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatfruit.wav"))
+snd_extralife = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extralife.wav"))
 
 ghostcolor = {
     0: (255, 0, 0, 255),
@@ -119,11 +120,11 @@ class game:
         # numerical display digits
         self.digit = {}
         for i in range(0, 10, 1):
-            self.digit[i] = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif")).convert()
-        self.imLife = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "life.gif")).convert()
-        self.imGameOver = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif")).convert()
-        self.imReady = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif")).convert()
-        self.imLogo = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif")).convert()
+            self.digit[i] = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif")).convert()
+        self.imLife = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "life.gif")).convert()
+        self.imGameOver = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif")).convert()
+        self.imReady = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif")).convert()
+        self.imLogo = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif")).convert()
         self.imHiscores = self.makehiscorelist()
 
     @staticmethod
@@ -203,8 +204,8 @@ class game:
         global rect_list
         "Read the High-Score file and convert it to a useable Surface."
         # My apologies for all the hard-coded constants.... -Andy
-        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
-        scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
+        f = pg.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
+        scoresurf = pg.Surface((HS_WIDTH, HS_HEIGHT), pg.SRCALPHA)
         scoresurf.set_alpha(HS_ALPHA)
         linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
         rect_list.append(scoresurf.blit(linesurf, (0, 0)))
@@ -591,7 +592,7 @@ class ghost:
 
         self.anim = {}
         for i in range(1, 7, 1):
-            self.anim[i] = pygame.image.load(
+            self.anim[i] = pg.image.load(
                 os.path.join(SCRIPT_PATH, "res", "sprite", "ghost " + str(i) + ".gif")).convert()
 
             # change the ghost color in this frame
@@ -763,7 +764,7 @@ class fruit:
 
         self.imFruit = {}
         for i in range(0, 5, 1):
-            self.imFruit[i] = pygame.image.load(
+            self.imFruit[i] = pg.image.load(
                 os.path.join(SCRIPT_PATH, "res", "sprite", "fruit " + str(i) + ".gif")).convert()
 
         self.currentPath = ""
@@ -852,9 +853,35 @@ class fruit:
                 elif self.currentPath[0] == "D":
                     (self.velX, self.velY) = (0, self.speed)
 
-
-class pacman:
+class pacman(pg.sprite.Sprite):
     def __init__(self):
+        super().__init__()
+
+        global TILE_WIDTH
+        global TILE_HEIGHT
+
+        self.anim_pacmanL = {}
+        self.anim_pacmanR = {}
+        self.anim_pacmanU = {}
+        self.anim_pacmanD = {}
+        self.anim_pacmanS = {}
+        self.anim_pacmanCurrent = {}
+
+        for i in range(1, 9, 1):
+            self.anim_pacmanL[i] = pg.image.load(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
+            self.anim_pacmanR[i] = pg.image.load(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
+            self.anim_pacmanU[i] = pg.image.load(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
+            self.anim_pacmanD[i] = pg.image.load(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
+            self.anim_pacmanS[i] = pg.image.load(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman.gif")).convert()
+
+        self.anim_pacmanCurrent = self.anim_pacmanS
+        self.animFrame = 1
+
         self.x = 0
         self.y = 0
         self.velX = 0
@@ -867,27 +894,38 @@ class pacman:
         self.homeX = 0
         self.homeY = 0
 
-        self.anim_pacmanL = {}
-        self.anim_pacmanR = {}
-        self.anim_pacmanU = {}
-        self.anim_pacmanD = {}
-        self.anim_pacmanS = {}
-        self.anim_pacmanCurrent = {}
-
-        self.animFrame = 1
-
-        for i in range(1, 9, 1):
-            self.anim_pacmanL[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
-            self.anim_pacmanR[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
-            self.anim_pacmanU[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
-            self.anim_pacmanD[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
-            self.anim_pacmanS[i] = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "sprite", "pacman.gif")).convert()
+        self.image = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
+        self.rect = self.image.get_rect()
 
         self.pelletSndNum = 0
+
+    def update(self):
+        if thisGame.mode == 3:
+            return False
+
+        # set the current frame array to match the direction pacman is facing
+        if self.velX > 0:
+            self.anim_pacmanCurrent = self.anim_pacmanR
+        elif self.velX < 0:
+            self.anim_pacmanCurrent = self.anim_pacmanL
+        elif self.velY > 0:
+            self.anim_pacmanCurrent = self.anim_pacmanD
+        elif self.velY < 0:
+            self.anim_pacmanCurrent = self.anim_pacmanU
+
+        self.rect.x = self.x - thisGame.screenPixelPos[0]
+        self.rect.y = self.y - thisGame.screenPixelPos[1]
+
+        self.image = self.anim_pacmanCurrent[self.animFrame]
+
+        if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
+            if self.velX != 0 or self.velY != 0:
+                # only Move mouth when pacman is moving
+                self.animFrame += 1
+
+            if self.animFrame == 9:
+                # wrap to beginning
+                self.animFrame = 1
 
     def Move(self):
         self.nearestRow = int(((self.y + (TILE_WIDTH / 2)) / TILE_WIDTH))
@@ -978,33 +1016,6 @@ class pacman:
 
         if thisGame.fruitScoreTimer > 0:
             thisGame.fruitScoreTimer -= 1
-
-    def Draw(self):
-        global rect_list
-        if thisGame.mode == 3:
-            return False
-
-        # set the current frame array to match the direction pacman is facing
-        if self.velX > 0:
-            self.anim_pacmanCurrent = self.anim_pacmanR
-        elif self.velX < 0:
-            self.anim_pacmanCurrent = self.anim_pacmanL
-        elif self.velY > 0:
-            self.anim_pacmanCurrent = self.anim_pacmanD
-        elif self.velY < 0:
-            self.anim_pacmanCurrent = self.anim_pacmanU
-
-        rect_list.append(screen.blit(self.anim_pacmanCurrent[self.animFrame],
-                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
-
-        if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
-            if self.velX != 0 or self.velY != 0:
-                # only Move mouth when pacman is moving
-                self.animFrame += 1
-
-            if self.animFrame == 9:
-                # wrap to beginning
-                self.animFrame = 1
 
 
 class level:
@@ -1421,35 +1432,35 @@ def CheckIfCloseButton(events):
 
 def CheckInputs():
     if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
-        if pygame.key.get_pressed()[pygame.K_RIGHT] or (js is not None and js.get_axis(JS_XAXIS) > 0.5):
+        if pg.key.get_pressed()[pg.K_RIGHT] or (js is not None and js.get_axis(JS_XAXIS) > 0.5):
             if not (player.velX == player.speed and player.velY == 0) and not thisLevel.CheckIfHitWall(
                     (player.x + player.speed, player.y), (player.nearestRow, player.nearestCol)):
                 player.velX = player.speed
                 player.velY = 0
 
-        elif pygame.key.get_pressed()[pygame.K_LEFT] or (js is not None and js.get_axis(JS_XAXIS) < -0.5):
+        elif pg.key.get_pressed()[pg.K_LEFT] or (js is not None and js.get_axis(JS_XAXIS) < -0.5):
             if not (player.velX == -player.speed and player.velY == 0) and not thisLevel.CheckIfHitWall(
                     (player.x - player.speed, player.y), (player.nearestRow, player.nearestCol)):
                 player.velX = -player.speed
                 player.velY = 0
 
-        elif pygame.key.get_pressed()[pygame.K_DOWN] or (js is not None and js.get_axis(JS_YAXIS) > 0.5):
+        elif pg.key.get_pressed()[pg.K_DOWN] or (js is not None and js.get_axis(JS_YAXIS) > 0.5):
             if not (player.velX == 0 and player.velY == player.speed) and not thisLevel.CheckIfHitWall(
                     (player.x, player.y + player.speed), (player.nearestRow, player.nearestCol)):
                 player.velX = 0
                 player.velY = player.speed
 
-        elif pygame.key.get_pressed()[pygame.K_UP] or (js is not None and js.get_axis(JS_YAXIS) < -0.5):
+        elif pg.key.get_pressed()[pg.K_UP] or (js is not None and js.get_axis(JS_YAXIS) < -0.5):
             if not (player.velX == 0 and player.velY == -player.speed) and not thisLevel.CheckIfHitWall(
                     (player.x, player.y - player.speed), (player.nearestRow, player.nearestCol)):
                 player.velX = 0
                 player.velY = -player.speed
 
-    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+    if pg.key.get_pressed()[pg.K_ESCAPE]:
         sys.exit(0)
 
     elif thisGame.mode == 3:
-        if pygame.key.get_pressed()[pygame.K_RETURN] or (js is not None and js.get_button(JS_STARTBUTTON)):
+        if pg.key.get_pressed()[pg.K_RETURN] or (js is not None and js.get_button(JS_STARTBUTTON)):
             thisGame.StartNewGame()
 
 
@@ -1483,10 +1494,10 @@ def GetCrossRef():
 
             thisID = int(str_splitBySpace[0])
             if not thisID in NO_GIF_TILES:
-                tileIDImage[thisID] = pygame.image.load(
+                tileIDImage[thisID] = pg.image.load(
                     os.path.join(SCRIPT_PATH, "res", "tiles", str_splitBySpace[1] + ".gif")).convert()
             else:
-                tileIDImage[thisID] = pygame.Surface((TILE_WIDTH, TILE_HEIGHT))
+                tileIDImage[thisID] = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
 
             # change colors in tileIDImage to match maze colors
             for y in range(0, TILE_WIDTH, 1):
@@ -1516,6 +1527,8 @@ def GetCrossRef():
 
 # create the pacman
 player = pacman()
+player_group = pg.sprite.Group()
+player_group.add(player)
 
 # create a path_finder object
 path = path_finder()
@@ -1541,15 +1554,15 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-#window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
-window = pygame.display.set_mode(thisGame.screenSize)
+#window = pg.display.set_mode(thisGame.screenSize, pg.FULLSCREEN)
+window = pg.display.set_mode(thisGame.screenSize)
 
 # initialise the joystick
-if pygame.joystick.get_count() > 0:
-    if JS_DEVNUM < pygame.joystick.get_count():
-        js = pygame.joystick.Joystick(JS_DEVNUM)
+if pg.joystick.get_count() > 0:
+    if JS_DEVNUM < pg.joystick.get_count():
+        js = pg.joystick.Joystick(JS_DEVNUM)
     else:
-        js = pygame.joystick.Joystick(0)
+        js = pg.joystick.Joystick(0)
     js.init()
 else:
     js = None
@@ -1568,7 +1581,7 @@ else:
 # 10 = blank screen before changing levels
 
 while True:
-    CheckIfCloseButton(pygame.event.get())
+    CheckIfCloseButton(pg.event.get())
     if thisGame.mode == 0:
         # ready to level start
         thisGame.modeTimer += 1
@@ -1709,7 +1722,8 @@ while True:
         for i in range(0, 4, 1):
             ghosts[i].Draw()
         thisFruit.Draw()
-        player.Draw()
+        player_group.update()
+        player_group.draw(screen)
 
         if thisGame.mode == 3:
             rect_list.append(screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET)))
@@ -1720,6 +1734,7 @@ while True:
 
     thisGame.DrawScore()
 
-    pygame.display.update(rect_list)
+    pg.display.flip()
+    #pg.display.update(rect_list)
     del rect_list[:]
     clock.tick(60)
