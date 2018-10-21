@@ -6,10 +6,11 @@ import sys
 
 import pygame as pg
 from pygame.locals import *
+from pygame.compat import geterror
 
 # WIN???
 SCRIPT_PATH = sys.path[0]
-
+SOUND_PATH = os.path.join(SCRIPT_PATH, "res", "sounds")
 SCREEN_TILE_SIZE_HEIGHT = 23
 SCREEN_TILE_SIZE_WIDTH = 30
 
@@ -55,6 +56,38 @@ pg.mixer.init()
 pg.mixer.set_num_channels(7)
 channel_backgound = pg.mixer.Channel(6)
 
+
+def load_image(*name, colorkey=None):
+    fullname = os.path.join(*name)
+    try:
+        image = pg.image.load(fullname).convert()
+    except pg.error:
+        print ('Cannot load image:', fullname)
+        raise SystemExit(str(geterror()))
+    image = image.convert()
+    if colorkey is not None:
+        if colorkey is -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey, RLEACCEL)
+    return image, image.get_rect()
+
+
+def load_sound(name):
+    class NoneSound:
+        def play(self):
+            pass
+    if not pg.mixer or not pg.mixer.get_init():
+        return NoneSound()
+    fullname = os.path.join(SOUND_PATH, name)
+    try:
+        sound = pg.mixer.Sound(fullname)
+    except pg.error:
+        print ('Cannot load sound: %s' % fullname)
+        raise SystemExit(str(geterror()))
+    return sound
+
+##########################################################################################################
+
 clock = pg.time.Clock()
 pg.init()
 
@@ -63,21 +96,22 @@ pg.display.set_caption("Pacman")
 
 screen = pg.display.get_surface()
 
-img_Background = pg.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif")).convert()
+img_Background, rect_Background  = load_image(SCRIPT_PATH, "res", "backgrounds", "1.gif")
 
 snd_pellet = {
-    0: pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav")),
-    1: pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet2.wav"))}
-snd_levelintro = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "levelintro.wav"))
-snd_default = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "default.wav"))
-snd_extrapac = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extrapac.wav"))
-snd_gh2gohome = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "gh2gohome.wav"))
-snd_death = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "death.wav"))
-snd_powerpellet = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "powerpellet.wav"))
-snd_eatgh = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh2.wav"))
-snd_fruitbounce = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
-snd_eatfruit = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatfruit.wav"))
-snd_extralife = pg.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extralife.wav"))
+    0: load_sound("pellet1.wav"),
+    1: load_sound("pellet2.wav")
+}
+snd_levelintro = load_sound("levelintro.wav")
+snd_default = load_sound("default.wav")
+snd_extrapac = load_sound("extrapac.wav")
+snd_gh2gohome = load_sound("gh2gohome.wav")
+snd_death = load_sound("death.wav")
+snd_powerpellet = load_sound("powerpellet.wav")
+snd_eatgh = load_sound("eatgh2.wav")
+snd_fruitbounce = load_sound("fruitbounce.wav")
+snd_eatfruit = load_sound("eatfruit.wav")
+snd_extralife = load_sound("extralife.wav")
 
 ghostcolor = {
     0: (255, 0, 0, 255),
@@ -85,7 +119,8 @@ ghostcolor = {
     2: (128, 255, 255, 255),
     3: (255, 128, 0, 255),
     4: (50, 50, 255, 255),
-    5: (255, 255, 255, 255)}
+    5: (255, 255, 255, 255)
+}
 
 #      ___________________
 # ___/  class definitions  \_______________________________________________
@@ -116,12 +151,14 @@ class game:
 
         # numerical display digits
         self.digit = {}
+        self.rect_digit = {}
         for i in range(0, 10, 1):
-            self.digit[i] = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif")).convert()
-        self.imLife = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "life.gif")).convert()
-        self.imGameOver = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif")).convert()
-        self.imReady = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif")).convert()
-        self.imLogo = pg.image.load(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif")).convert()
+            self.digit[i], self.rect_digit[i]= load_image(SCRIPT_PATH, "res", "text", str(i) + ".gif")
+        self.imLife, self.rect_imLife = load_image(SCRIPT_PATH, "res", "text", "life.gif")
+        self.imGameOver, self.rect_imGameOver = load_image(SCRIPT_PATH, "res", "text", "gameover.gif")
+        self.imReady, self.rect_imReady = load_image(SCRIPT_PATH, "res", "text", "ready.gif")
+        self.imLogo, self.rect_imLogo = load_image(SCRIPT_PATH, "res", "text", "logo.gif")
+        ##TODO
         self.imHiscores = self.makehiscorelist()
 
     @staticmethod
@@ -570,9 +607,9 @@ class ghost(pg.sprite.Sprite):
         self.id = ghostID
 
         self.anim = {}
+        self.rect_anim = {}
         for i in range(1, 7, 1):
-            self.anim[i] = pg.image.load(
-                    os.path.join(SCRIPT_PATH, "res", "sprite", "ghost " + str(i) + ".gif")).convert()
+            self.anim[i], self.rect_anim[i] = load_image(SCRIPT_PATH, "res", "sprite", "ghost " + str(i) + ".gif")
 
             # change the ghost color in this frame
             for y in range(0, TILE_HEIGHT, 1):
@@ -751,9 +788,9 @@ class fruit(pg.sprite.Sprite):
         global TILE_HEIGHT
 
         self.imFruit = {}
+        self.rect_imFruit = {}
         for i in range(0, 5, 1):
-            self.imFruit[i] = pg.image.load(
-                    os.path.join(SCRIPT_PATH, "res", "sprite", "fruit " + str(i) + ".gif")).convert()
+            self.imFruit[i], self.rect_imFruit = load_image(SCRIPT_PATH, "res", "sprite", "fruit " + str(i) + ".gif")
 
         # when fruit is not in use, it's in the (-1, -1) position off-screen.
         self.slowTimer = 0
@@ -874,17 +911,19 @@ class pacman(pg.sprite.Sprite):
         self.anim_pacmanD = {}
         self.anim_pacmanS = {}
         self.anim_pacmanCurrent = {}
+
+        self.rect_anim_pacmanL = {}
+        self.rect_anim_pacmanR = {}
+        self.rect_anim_pacmanU = {}
+        self.rect_anim_pacmanD = {}
+        self.rect_anim_pacmanS = {}
+        self.rect_anim_pacmanCurrent = {}
         for i in range(1, 9, 1):
-            self.anim_pacmanL[i] = pg.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
-            self.anim_pacmanR[i] = pg.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
-            self.anim_pacmanU[i] = pg.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
-            self.anim_pacmanD[i] = pg.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
-            self.anim_pacmanS[i] = pg.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman.gif")).convert()
+            self.anim_pacmanL[i], self.rect_anim_pacmanL[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif")
+            self.anim_pacmanR[i], self.rect_anim_pacmanR[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif")
+            self.anim_pacmanU[i], self.rect_anim_pacmanU[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif")
+            self.anim_pacmanD[i], self.rect_anim_pacmanD[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-d " + str(i) + ".gif")
+            self.anim_pacmanS[i], self.rect_anim_pacmanS[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman.gif")
 
         self.anim_pacmanCurrent = self.anim_pacmanS
         self.animFrame = 1
@@ -1500,8 +1539,7 @@ def GetCrossRef():
 
             thisID = int(str_splitBySpace[0])
             if not thisID in NO_GIF_TILES:
-                tileIDImage[thisID] = pg.image.load(
-                    os.path.join(SCRIPT_PATH, "res", "tiles", str_splitBySpace[1] + ".gif")).convert()
+                tileIDImage[thisID], rect_tileIDImage[thisID] = load_image(SCRIPT_PATH, "res", "tiles", str_splitBySpace[1] + ".gif")
             else:
                 tileIDImage[thisID] = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
 
@@ -1555,6 +1593,7 @@ path = path_finder()
 tileIDName = {}  # gives tile name (when the ID# is known)
 tileID = {}  # gives tile ID (when the name is known)
 tileIDImage = {}  # gives tile image (when the ID# is known)
+rect_tileIDImage = {}
 oldEdgeLightColor = None
 oldEdgeShadowColor = None
 oldFillColor = None
