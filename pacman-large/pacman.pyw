@@ -120,7 +120,6 @@ ghostcolor = [
 ]
 
 player_group = pg.sprite.Group()
-ghosts_group = pg.sprite.Group()
 fruit_group = pg.sprite.Group()
 
 #      ___________________
@@ -598,7 +597,7 @@ class path_finder:
                 screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2)))
 
 
-class ghost(pg.sprite.Sprite):
+class ghost(pg.sprite.DirtySprite):
     def __init__(self, ghostID):
         super().__init__()
 
@@ -640,18 +639,13 @@ class ghost(pg.sprite.Sprite):
 
         self.currentPath = ""
 
-        self.image = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
+        self.image = pg.Surface(self.anim[0].get_size())
         self.rect = self.image.get_rect()
+        self.dirty = 1
 
     def update(self):
-        if thisGame.mode == 3:
-            for g in ghosts.values():
-                g.remove(ghosts_group)
+        if thisGame.mode == 3 or thisGame.mode == 6 or thisGame.mode == 7:
             return False
-
-        for g in ghosts.values():
-            if not g.alive():
-                ghosts_group.add(g)
 
         # ghost eyes --
         pupilSet = None
@@ -705,20 +699,16 @@ class ghost(pg.sprite.Sprite):
             # draw glasses
             self.image = tileIDImage[tileID['glasses']]
 
-        if thisGame.mode == 6 or thisGame.mode == 7:
-            # don't animate ghost if the level is complete
-            return False
-
         self.animDelay += 1
 
         if self.animDelay == 2:
             self.animFrame += 1
-
+            self.animDelay = 0
             if self.animFrame == 6:
-                # wrap to beginning
                 self.animFrame = 0
 
-            self.animDelay = 0
+
+        self.dirty = 1
 
     def Move(self):
         self.x += self.velX
@@ -948,7 +938,7 @@ class pacman(pg.sprite.Sprite):
         self.homeX = 0
         self.homeY = 0
 
-        self.image = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
+        self.image = pg.Surface(self.anim_pacmanCurrent[0].get_size())
         self.rect = self.image.get_rect()
 
         self.pelletSndNum = 0
@@ -1583,9 +1573,11 @@ player_group.add(player)
 # create ghost objects
 ghosts = {}
 for i in range(0, 6):
-    # remember, ghost[4] is the blue, vulnerable ghost
+    # remember, ghost[4] is the blue, ghost[5] is eyes.
+    # 만들어 놓았지만, 그려놓을 필요는 없음. 필요한 상황에서 만들어 놓은걸로 바꾸기만 하면 됨.
     ghosts[i] = ghost(i)
-    ghosts_group.add(ghosts[i])
+
+allsprites = pg.sprite.LayeredDirty((ghosts[0],ghosts[1],ghosts[2],ghosts[3]))
 
 # create piece of fruit
 thisFruit = fruit()
@@ -1648,7 +1640,7 @@ while True:
         thisGame.modeTimer += 1
 
         player.Move()
-        for i in range(0, 4, 1):
+        for i in range(0, 4):
             ghosts[i].Move()
         thisFruit.Move()
 
@@ -1773,11 +1765,11 @@ while True:
                     thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
 
         player_group.update()
-        ghosts_group.update()
+        allsprites.update()
         fruit_group.update()
 
         player_group.draw(screen)
-        ghosts_group.draw(screen)
+        rects = allsprites.draw(screen)
         fruit_group.draw(screen)
 
         if thisGame.mode == 3:
@@ -1790,5 +1782,6 @@ while True:
     thisGame.DrawScore()
 
     pg.display.flip()
+    #pg.display.update(rects)
 
     clock.tick(60)
