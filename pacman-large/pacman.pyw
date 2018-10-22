@@ -98,10 +98,7 @@ screen = pg.display.get_surface()
 
 img_Background, rect_Background  = load_image(SCRIPT_PATH, "res", "backgrounds", "1.gif")
 
-snd_pellet = {
-    0: load_sound("pellet1.wav"),
-    1: load_sound("pellet2.wav")
-}
+snd_pellet = [load_sound("pellet1.wav"),load_sound("pellet2.wav")]
 snd_levelintro = load_sound("levelintro.wav")
 snd_default = load_sound("default.wav")
 snd_extrapac = load_sound("extrapac.wav")
@@ -113,14 +110,18 @@ snd_fruitbounce = load_sound("fruitbounce.wav")
 snd_eatfruit = load_sound("eatfruit.wav")
 snd_extralife = load_sound("extralife.wav")
 
-ghostcolor = {
-    0: (255, 0, 0, 255),
-    1: (255, 128, 255, 255),
-    2: (128, 255, 255, 255),
-    3: (255, 128, 0, 255),
-    4: (50, 50, 255, 255),
-    5: (255, 255, 255, 255)
-}
+ghostcolor = [
+    (255, 0, 0, 255),
+    (255, 128, 255, 255),
+    (128, 255, 255, 255),
+    (255, 128, 0, 255),
+    (50, 50, 255, 255),
+    (255, 255, 255, 255)
+]
+
+player_group = pg.sprite.Group()
+ghosts_group = pg.sprite.Group()
+fruit_group = pg.sprite.Group()
 
 #      ___________________
 # ___/  class definitions  \_______________________________________________
@@ -152,7 +153,7 @@ class game:
         # numerical display digits
         self.digit = {}
         self.rect_digit = {}
-        for i in range(0, 10, 1):
+        for i in range(0, 10):
             self.digit[i], self.rect_digit[i]= load_image(SCRIPT_PATH, "res", "text", str(i) + ".gif")
         self.imLife, self.rect_imLife = load_image(SCRIPT_PATH, "res", "text", "life.gif")
         self.imGameOver, self.rect_imGameOver = load_image(SCRIPT_PATH, "res", "text", "gameover.gif")
@@ -275,7 +276,7 @@ class game:
     def DrawScore(self):
         self.DrawNumber(self.score, (SCORE_XOFFSET, self.screenSize[1] - SCORE_YOFFSET))
 
-        for i in range(0, self.lives, 1):
+        for i in range(0, self.lives):
             screen.blit(self.imLife, (34 + i * 10 + 16, self.screenSize[1] - 18))
 
         screen.blit(thisFruit.imFruit[thisFruit.fruitType], (4 + 16, self.screenSize[1] - 28))
@@ -293,7 +294,7 @@ class game:
 
         strNumber = str(number)
 
-        for i in range(0, len(str(number)), 1):
+        for i in range(0, len(str(number))):
             if strNumber[i] == '.':
                 break
             iDigit = int(strNumber[i])
@@ -403,8 +404,8 @@ class path_finder:
         self.size = (numRows, numCols)
 
         # initialize path_finder map to a 2D array of empty nodes
-        for row in range(0, self.size[0], 1):
-            for col in range(0, self.size[1], 1):
+        for row in range(0, self.size[0]):
+            for col in range(0, self.size[1]):
                 self.Set((row, col), node())
                 self.SetType((row, col), 0)
 
@@ -591,8 +592,8 @@ class path_finder:
         return self.map[self.Unfold((row, col))].parent
 
     def draw(self):
-        for row in range(0, self.size[0], 1):
-            for col in range(0, self.size[1], 1):
+        for row in range(0, self.size[0]):
+            for col in range(0, self.size[1]):
                 thisTile = self.GetType((row, col))
                 screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2)))
 
@@ -601,25 +602,22 @@ class ghost(pg.sprite.Sprite):
     def __init__(self, ghostID):
         super().__init__()
 
-        global TILE_WIDTH
-        global TILE_HEIGHT
-
         self.id = ghostID
 
         self.anim = {}
         self.rect_anim = {}
-        for i in range(1, 7, 1):
+        for i in range(0, 6):
             self.anim[i], self.rect_anim[i] = load_image(SCRIPT_PATH, "res", "sprite", "ghost " + str(i) + ".gif")
 
             # change the ghost color in this frame
-            for y in range(0, TILE_HEIGHT, 1):
-                for x in range(0, TILE_WIDTH, 1):
+            for y in range(0, TILE_HEIGHT):
+                for x in range(0, TILE_WIDTH):
 
                     if self.anim[i].get_at((x, y)) == (255, 0, 0, 255):
                         # default, red ghost body color
                         self.anim[i].set_at((x, y), ghostcolor[self.id])
 
-        self.animFrame = 1
+        self.animFrame = 0
         self.animDelay = 0
 
         self.x = 0
@@ -647,11 +645,17 @@ class ghost(pg.sprite.Sprite):
 
     def update(self):
         if thisGame.mode == 3:
+            for g in ghosts.values():
+                g.remove(ghosts_group)
             return False
+
+        for g in ghosts.values():
+            if not g.alive():
+                ghosts_group.add(g)
 
         # ghost eyes --
         pupilSet = None
-        for y in range(6, 12, 1):
+        for y in range(6, 12):
             for x in [5, 6, 8, 9]:
                 self.anim[self.animFrame].set_at((x, y), (248, 248, 248, 255))
                 self.anim[self.animFrame].set_at((x + 9, y), (248, 248, 248, 255))
@@ -671,7 +675,7 @@ class ghost(pg.sprite.Sprite):
                 else:
                     pupilSet = (5, 9)
 
-        for y in range(pupilSet[1], pupilSet[1] + 3, 1):
+        for y in range(pupilSet[1], pupilSet[1] + 3):
             for x in range(pupilSet[0], pupilSet[0] + 2, 1):
                 self.anim[self.animFrame].set_at((x, y), (0, 0, 255, 255))
                 self.anim[self.animFrame].set_at((x + 9, y), (0, 0, 255, 255))
@@ -710,9 +714,9 @@ class ghost(pg.sprite.Sprite):
         if self.animDelay == 2:
             self.animFrame += 1
 
-            if self.animFrame == 7:
+            if self.animFrame == 6:
                 # wrap to beginning
-                self.animFrame = 1
+                self.animFrame = 0
 
             self.animDelay = 0
 
@@ -789,7 +793,7 @@ class fruit(pg.sprite.Sprite):
 
         self.imFruit = {}
         self.rect_imFruit = {}
-        for i in range(0, 5, 1):
+        for i in range(0, 5):
             self.imFruit[i], self.rect_imFruit = load_image(SCRIPT_PATH, "res", "sprite", "fruit " + str(i) + ".gif")
 
         # when fruit is not in use, it's in the (-1, -1) position off-screen.
@@ -815,7 +819,11 @@ class fruit(pg.sprite.Sprite):
 
     def update(self):
         if thisGame.mode == 3 or self.active == False:
+            thisFruit.remove(fruit_group)
             return False
+
+        if not thisFruit.alive():
+            fruit_group.add(thisFruit)
 
         self.rect.x = self.x - thisGame.screenPixelPos[0]
         self.rect.y = self.y - thisGame.screenPixelPos[1] - self.bounceY
@@ -918,7 +926,7 @@ class pacman(pg.sprite.Sprite):
         self.rect_anim_pacmanD = {}
         self.rect_anim_pacmanS = {}
         self.rect_anim_pacmanCurrent = {}
-        for i in range(1, 9, 1):
+        for i in range(0, 8):
             self.anim_pacmanL[i], self.rect_anim_pacmanL[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif")
             self.anim_pacmanR[i], self.rect_anim_pacmanR[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif")
             self.anim_pacmanU[i], self.rect_anim_pacmanU[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif")
@@ -926,7 +934,7 @@ class pacman(pg.sprite.Sprite):
             self.anim_pacmanS[i], self.rect_anim_pacmanS[i] = load_image(SCRIPT_PATH, "res", "sprite", "pacman.gif")
 
         self.anim_pacmanCurrent = self.anim_pacmanS
-        self.animFrame = 1
+        self.animFrame = 0
 
         self.x = 0
         self.y = 0
@@ -969,9 +977,9 @@ class pacman(pg.sprite.Sprite):
                 # only Move mouth when pacman is moving
                 self.animFrame += 1
 
-            if self.animFrame == 9:
+            if self.animFrame == 8:
                 # wrap to beginning
-                self.animFrame = 1
+                self.animFrame = 0
 
     def Move(self):
         self.nearestRow = int(((self.y + (TILE_WIDTH / 2)) / TILE_WIDTH))
@@ -987,7 +995,7 @@ class pacman(pg.sprite.Sprite):
             thisLevel.CheckIfHitSomething((self.x, self.y), (self.nearestRow, self.nearestCol))
 
             # check for collisions with the ghosts
-            for i in range(0, 4, 1):
+            for i in range(0, 4):
                 if thisLevel.CheckIfHit((self.x, self.y), (ghosts[i].x, ghosts[i].y), TILE_WIDTH / 2):
                     # hit a ghost
 
@@ -1035,7 +1043,7 @@ class pacman(pg.sprite.Sprite):
 
             if thisGame.ghostTimer == 0:
                 thisGame.PlayBackgoundSound(snd_default)
-                for i in range(0, 4, 1):
+                for i in range(0, 4):
                     if ghosts[i].state == 2:
                         ghosts[i].state = 1
                 thisGame.ghostValue = 0
@@ -1113,8 +1121,8 @@ class level:
         numCollisions = 0
 
         # check each of the 9 surrounding tiles for a collision
-        for iRow in range(row - 1, row + 2, 1):
-            for iCol in range(col - 1, col + 2, 1):
+        for iRow in range(row - 1, row + 2):
+            for iCol in range(col - 1, col + 2):
 
                 if (possiblePlayerX - (iCol * TILE_WIDTH) < TILE_WIDTH) and (
                         possiblePlayerX - (iCol * TILE_WIDTH) > -TILE_WIDTH) and (
@@ -1143,8 +1151,8 @@ class level:
     def CheckIfHitSomething(playerX_playerY, row_col):
         (playerX, playerY) = playerX_playerY
         (row, col) = row_col
-        for iRow in range(row - 1, row + 2, 1):
-            for iCol in range(col - 1, col + 2, 1):
+        for iRow in range(row - 1, row + 2):
+            for iCol in range(col - 1, col + 2):
 
                 if (playerX - (iCol * TILE_WIDTH) < TILE_WIDTH) and (
                         playerX - (iCol * TILE_WIDTH) > -TILE_WIDTH) and (
@@ -1179,7 +1187,7 @@ class level:
                         thisGame.ghostValue = 200
 
                         thisGame.ghostTimer = 360
-                        for i in range(0, 4, 1):
+                        for i in range(0, 4):
                             if ghosts[i].state == 1:
                                 ghosts[i].state = 2
 
@@ -1201,7 +1209,7 @@ class level:
 
                     elif result == tileID['door-h']:
                         # ran into a horizontal door
-                        for i in range(0, thisLevel.lvlWidth, 1):
+                        for i in range(0, thisLevel.lvlWidth):
                             if not i == iCol:
                                 if thisLevel.GetMapTile((iRow, i)) == tileID['door-h']:
                                     player.x = i * TILE_WIDTH
@@ -1213,7 +1221,7 @@ class level:
 
                     elif result == tileID['door-v']:
                         # ran into a vertical door
-                        for i in range(0, thisLevel.lvlHeight, 1):
+                        for i in range(0, thisLevel.lvlHeight):
                             if not i == iRow:
                                 if thisLevel.GetMapTile((i, iCol)) == tileID['door-v']:
                                     player.y = i * TILE_HEIGHT
@@ -1224,8 +1232,8 @@ class level:
                                         player.y -= TILE_HEIGHT
 
     def GetGhostBoxPos(self):
-        for row in range(0, self.lvlHeight, 1):
-            for col in range(0, self.lvlWidth, 1):
+        for row in range(0, self.lvlHeight):
+            for col in range(0, self.lvlWidth):
                 if self.GetMapTile((row, col)) == tileID['ghost-door']:
                     return row, col
 
@@ -1234,8 +1242,8 @@ class level:
     def GetPathwayPairPos(self):
         doorArray = []
 
-        for row in range(0, self.lvlHeight, 1):
-            for col in range(0, self.lvlWidth, 1):
+        for row in range(0, self.lvlHeight):
+            for col in range(0, self.lvlWidth):
                 if self.GetMapTile((row, col)) == tileID['door-h']:
                     # found a horizontal door
                     doorArray.append((row, col))
@@ -1251,14 +1259,14 @@ class level:
         if self.GetMapTile(doorArray[chosenDoor]) == tileID['door-h']:
             # horizontal door was chosen
             # look for the opposite one
-            for i in range(0, thisLevel.lvlWidth, 1):
+            for i in range(0, thisLevel.lvlWidth):
                 if not i == doorArray[chosenDoor][1]:
                     if thisLevel.GetMapTile((doorArray[chosenDoor][0], i)) == tileID['door-h']:
                         return doorArray[chosenDoor], (doorArray[chosenDoor][0], i)
         else:
             # vertical door was chosen
             # look for the opposite one
-            for i in range(0, thisLevel.lvlHeight, 1):
+            for i in range(0, thisLevel.lvlHeight):
                 if not i == doorArray[chosenDoor][0]:
                     if thisLevel.GetMapTile((i, doorArray[chosenDoor][1])) == tileID['door-v']:
                         return doorArray[chosenDoor], (i, doorArray[chosenDoor][1])
@@ -1266,9 +1274,9 @@ class level:
         return False
 
     def PrintMap(self):
-        for row in range(0, self.lvlHeight, 1):
+        for row in range(0, self.lvlHeight):
             outputLine = ""
-            for col in range(0, self.lvlWidth, 1):
+            for col in range(0, self.lvlWidth):
                 outputLine += str(self.GetMapTile((row, col))) + ", "
 
     def DrawMap(self):
@@ -1276,8 +1284,8 @@ class level:
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
 
-        for row in range(-1, thisGame.screenTileSize[0] + 1, 1):
-            for col in range(-1, thisGame.screenTileSize[1] + 1, 1):
+        for row in range(-1, thisGame.screenTileSize[0] + 1):
+            for col in range(-1, thisGame.screenTileSize[1] + 1):
 
                 # row containing tile that actually goes here
                 actualRow = thisGame.screenNearestTilePos[0] + row
@@ -1393,7 +1401,7 @@ class level:
 
                     # print str( len(str_splitBySpace) ) + " tiles in this column"
 
-                    for k in range(0, self.lvlWidth, 1):
+                    for k in range(0, self.lvlWidth):
                         self.SetMapTile((rowNum, k), int(str_splitBySpace[k]))
 
                         thisID = int(str_splitBySpace[k])
@@ -1424,8 +1432,8 @@ class level:
         # load map into the pathfinder object
         path.ResizeMap((self.lvlHeight, self.lvlWidth))
 
-        for row in range(0, path.size[0], 1):
-            for col in range(0, path.size[1], 1):
+        for row in range(0, path.size[0]):
+            for col in range(0, path.size[1]):
                 if self.IsWall((row, col)):
                     path.SetType((row, col), 1)
                 else:
@@ -1435,7 +1443,7 @@ class level:
         self.Restart()
 
     def Restart(self):
-        for i in range(0, 4, 1):
+        for i in range(0, 4):
             # move ghosts back to home
             ghosts[i].x = ghosts[i].homeX
             ghosts[i].y = ghosts[i].homeY
@@ -1544,8 +1552,8 @@ def GetCrossRef():
                 tileIDImage[thisID] = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
 
             # change colors in tileIDImage to match maze colors
-            for y in range(0, TILE_WIDTH, 1):
-                for x in range(0, TILE_HEIGHT, 1):
+            for y in range(0, TILE_WIDTH):
+                for x in range(0, TILE_HEIGHT):
 
                     if tileIDImage[thisID].get_at((x, y)) == IMG_EDGE_LIGHT_COLOR:
                         # wall edge
@@ -1568,17 +1576,13 @@ def GetCrossRef():
 
 #      __________________
 # ___/  main code block  \_____________________________________________________
-player_group = pg.sprite.Group()
-ghosts_group = pg.sprite.Group()
-fruit_group = pg.sprite.Group()
-
 # create the pacman
 player = pacman()
 player_group.add(player)
 
 # create ghost objects
 ghosts = {}
-for i in range(0, 6, 1):
+for i in range(0, 6):
     # remember, ghost[4] is the blue, vulnerable ghost
     ghosts[i] = ghost(i)
     ghosts_group.add(ghosts[i])
@@ -1721,10 +1725,10 @@ while True:
 
         player.Move()
 
-        for i in range(0, 4, 1):
+        for i in range(0, 4):
             ghosts[i].Move()
 
-        for i in range(0, 4, 1):
+        for i in range(0, 4):
             if ghosts[i].state == 3:
                 ghostState = 3
                 break
