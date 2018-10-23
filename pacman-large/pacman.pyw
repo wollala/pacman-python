@@ -1265,10 +1265,14 @@ class level:
         return False
 
     def PrintMap(self):
+        print("-" * 100)
         for row in range(0, self.lvlHeight):
             outputLine = ""
             for col in range(0, self.lvlWidth):
-                outputLine += str(self.GetMapTile((row, col))) + ", "
+                outputLine += str(self.GetMapTile((row, col))).rjust(3, ' ') + ", "
+            print(outputLine)
+        print("-" * 100)
+
 
     def DrawMap(self):
         tilesSprites.empty()
@@ -1612,8 +1616,8 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-window = pg.display.set_mode(thisGame.screenSize, pg.FULLSCREEN)
-#window = pg.display.set_mode(thisGame.screenSize)
+#window = pg.display.set_mode(thisGame.screenSize, pg.FULLSCREEN)
+window = pg.display.set_mode(thisGame.screenSize)
 
 # initialise the joystick
 if pg.joystick.get_count() > 0:
