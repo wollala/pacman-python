@@ -119,9 +119,6 @@ ghostcolor = [
     (255, 255, 255, 255)
 ]
 
-player_group = pg.sprite.Group()
-fruit_group = pg.sprite.Group()
-
 #      ___________________
 # ___/  class definitions  \_______________________________________________
 
@@ -707,7 +704,6 @@ class ghost(pg.sprite.DirtySprite):
             if self.animFrame == 6:
                 self.animFrame = 0
 
-
         self.dirty = 1
 
     def Move(self):
@@ -774,12 +770,9 @@ class ghost(pg.sprite.DirtySprite):
                     self.FollowNextPathWay()
 
 
-class fruit(pg.sprite.Sprite):
+class fruit(pg.sprite.DirtySprite):
     def __init__(self):
         super().__init__()
-
-        global TILE_WIDTH
-        global TILE_HEIGHT
 
         self.imFruit = {}
         self.rect_imFruit = {}
@@ -804,21 +797,19 @@ class fruit(pg.sprite.Sprite):
         self.currentPath = ""
         self.fruitType = 1
 
-        self.image = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
+        self.image = pg.Surface(self.imFruit[0].get_size())
         self.rect = self.image.get_rect()
 
     def update(self):
         if thisGame.mode == 3 or self.active == False:
-            thisFruit.remove(fruit_group)
             return False
-
-        if not thisFruit.alive():
-            fruit_group.add(thisFruit)
 
         self.rect.x = self.x - thisGame.screenPixelPos[0]
         self.rect.y = self.y - thisGame.screenPixelPos[1] - self.bounceY
 
         self.image = self.imFruit[self.fruitType]
+
+        self.dirty = 1
 
     def Move(self):
         if not self.active:
@@ -896,7 +887,7 @@ class fruit(pg.sprite.Sprite):
                     (self.velX, self.velY) = (0, self.speed)
 
 
-class pacman(pg.sprite.Sprite):
+class pacman(pg.sprite.DirtySprite):
     def __init__(self):
         super().__init__()
 
@@ -970,6 +961,8 @@ class pacman(pg.sprite.Sprite):
             if self.animFrame == 8:
                 # wrap to beginning
                 self.animFrame = 0
+
+        self.dirty = 1
 
     def Move(self):
         self.nearestRow = int(((self.y + (TILE_WIDTH / 2)) / TILE_WIDTH))
@@ -1062,8 +1055,18 @@ class pacman(pg.sprite.Sprite):
             thisGame.fruitScoreTimer -= 1
 
 
-class level:
+class Tile(pg.sprite.DirtySprites):
+    def __init__(self, image):
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.dirty = 1
+
+        
+################################ level class ################################
+class level(pg.sprite.DirtySprite):
     def __init__(self):
+        super().__init__()
+
         self.lvlWidth = 0
         self.lvlHeight = 0
         self.edgeLightColor = (255, 255, 0, 255)
@@ -1076,56 +1079,8 @@ class level:
         self.pellets = 0
         self.powerPelletBlinkTimer = 0
 
-    def SetMapTile(self, row_col, newValue):
-        (row, col) = row_col
-        self.map[(row * self.lvlWidth) + col] = newValue
-
-    def GetMapTile(self, row_col):
-        (row, col) = row_col
-        if 0 <= row < self.lvlHeight and 0 <= col < self.lvlWidth:
-            return self.map[(row * self.lvlWidth) + col]
-        else:
-            return 0
-
-    @staticmethod
-    def IsWall(row_col):
-        (row, col) = row_col
-        if row > thisLevel.lvlHeight - 1 or row < 0:
-            return True
-
-        if col > thisLevel.lvlWidth - 1 or col < 0:
-            return True
-
-        # check the offending tile ID
-        result = thisLevel.GetMapTile((row, col))
-
-        # if the tile was a wall
-        if 100 <= result <= 199:
-            return True
-        else:
-            return False
-
-    def CheckIfHitWall(self, possiblePlayerX_possiblePlayerY, row_col):
-        (possiblePlayerX, possiblePlayerY) = possiblePlayerX_possiblePlayerY
-        (row, col) = row_col
-        numCollisions = 0
-
-        # check each of the 9 surrounding tiles for a collision
-        for iRow in range(row - 1, row + 2):
-            for iCol in range(col - 1, col + 2):
-
-                if (possiblePlayerX - (iCol * TILE_WIDTH) < TILE_WIDTH) and (
-                        possiblePlayerX - (iCol * TILE_WIDTH) > -TILE_WIDTH) and (
-                        possiblePlayerY - (iRow * TILE_HEIGHT) < TILE_HEIGHT) and (
-                        possiblePlayerY - (iRow * TILE_HEIGHT) > -TILE_HEIGHT):
-
-                    if self.IsWall((iRow, iCol)):
-                        numCollisions += 1
-
-        if numCollisions > 0:
-            return True
-        else:
-            return False
+        self.image = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
+        self.rect = self.image.get_rect()
 
     @staticmethod
     def CheckIfHit(playerX_playerY, x_y, cushion):
@@ -1185,7 +1140,7 @@ class level:
                                 # Must line up with grid before invoking a new path (for now)
                                 ghosts[i].x = ghosts[i].nearestCol * TILE_HEIGHT
                                 ghosts[i].y = ghosts[i].nearestRow * TILE_WIDTH								
-                                
+
                                 # give each ghost a path to a random spot (containing a pellet)
                                 (randRow, randCol) = (0, 0)
 
@@ -1193,7 +1148,7 @@ class level:
                                     randRow = random.randint(1, self.lvlHeight - 2)
                                     randCol = random.randint(1, self.lvlWidth - 2)
                                 ghosts[i].currentPath = path.FindPath( (ghosts[i].nearestRow, ghosts[i].nearestCol), (randRow, randCol) )
-                                
+
                                 ghosts[i].FollowNextPathWay()
                                 """
 
@@ -1220,6 +1175,56 @@ class level:
                                         player.y += TILE_HEIGHT
                                     else:
                                         player.y -= TILE_HEIGHT
+    @staticmethod
+    def IsWall(row_col):
+        (row, col) = row_col
+        if row > thisLevel.lvlHeight - 1 or row < 0:
+            return True
+
+        if col > thisLevel.lvlWidth - 1 or col < 0:
+            return True
+
+        # check the offending tile ID
+        result = thisLevel.GetMapTile((row, col))
+
+        # if the tile was a wall
+        if 100 <= result <= 199:
+            return True
+        else:
+            return False
+
+    def SetMapTile(self, row_col, newValue):
+        (row, col) = row_col
+        self.map[(row * self.lvlWidth) + col] = newValue
+
+    def GetMapTile(self, row_col):
+        (row, col) = row_col
+        if 0 <= row < self.lvlHeight and 0 <= col < self.lvlWidth:
+            return self.map[(row * self.lvlWidth) + col]
+        else:
+            return 0
+
+    def CheckIfHitWall(self, possiblePlayerX_possiblePlayerY, row_col):
+        (possiblePlayerX, possiblePlayerY) = possiblePlayerX_possiblePlayerY
+        (row, col) = row_col
+        numCollisions = 0
+
+        # check each of the 9 surrounding tiles for a collision
+        for iRow in range(row - 1, row + 2):
+            for iCol in range(col - 1, col + 2):
+
+                if (possiblePlayerX - (iCol * TILE_WIDTH) < TILE_WIDTH) and (
+                        possiblePlayerX - (iCol * TILE_WIDTH) > -TILE_WIDTH) and (
+                        possiblePlayerY - (iRow * TILE_HEIGHT) < TILE_HEIGHT) and (
+                        possiblePlayerY - (iRow * TILE_HEIGHT) > -TILE_HEIGHT):
+
+                    if self.IsWall((iRow, iCol)):
+                        numCollisions += 1
+
+        if numCollisions > 0:
+            return True
+        else:
+            return False
 
     def GetGhostBoxPos(self):
         for row in range(0, self.lvlHeight):
@@ -1269,7 +1274,7 @@ class level:
             for col in range(0, self.lvlWidth):
                 outputLine += str(self.GetMapTile((row, col))) + ", "
 
-    def DrawMap(self):
+    def update(self):
         self.powerPelletBlinkTimer += 1
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
@@ -1286,20 +1291,32 @@ class level:
                     # if this isn't a blank tile
                     if useTile == tileID['pellet-power']:
                         if self.powerPelletBlinkTimer < 30:
-                            screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                               row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                            self.image = tileIDImage[useTile]
+                            self.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
+                            self.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
+                            self.dirty = 1
+                            #screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     elif useTile == tileID['showlogo']:
-                        screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                      row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        self.image = thisGame.imLogo
+                        self.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
+                        self.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
+                        self.dirty = 1
+                        #screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     elif useTile == tileID['hiscores']:
-                        screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                          row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        self.image = thisGame.imHiscores
+                        self.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
+                        self.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
+                        self.dirty = 1
+                        #screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     else:
-                        screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                           row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        self.image = tileIDImage[useTile]
+                        self.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
+                        self.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
+                        self.dirty = 1
+                        #screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
     def LoadLevel(self, levelNum):
         self.map = {}
@@ -1465,6 +1482,7 @@ class level:
 
         player.anim_pacmanCurrent = player.anim_pacmanS
         player.animFrame = 3
+################################ level class end ################################
 
 
 def CheckIfCloseButton(events):
@@ -1568,7 +1586,6 @@ def GetCrossRef():
 # ___/  main code block  \_____________________________________________________
 # create the pacman
 player = pacman()
-player_group.add(player)
 
 # create ghost objects
 ghosts = {}
@@ -1577,14 +1594,14 @@ for i in range(0, 6):
     # 만들어 놓았지만, 그려놓을 필요는 없음. 필요한 상황에서 만들어 놓은걸로 바꾸기만 하면 됨.
     ghosts[i] = ghost(i)
 
-allsprites = pg.sprite.LayeredDirty((ghosts[0],ghosts[1],ghosts[2],ghosts[3]))
-
 # create piece of fruit
 thisFruit = fruit()
-fruit_group.add(thisFruit)
 
 # create a path_finder object
 path = path_finder()
+
+allSprites = pg.sprite.LayeredDirty((ghosts[0], ghosts[1], ghosts[2], ghosts[3], player, thisFruit))
+tilesSprites = pg.sprite.LayeredDirty()
 
 tileIDName = {}  # gives tile name (when the ID# is known)
 tileID = {}  # gives tile ID (when the name is known)
@@ -1757,20 +1774,16 @@ while True:
     screen.blit(img_Background, (0, 0))
 
     if not thisGame.mode == 10:
-        thisLevel.DrawMap()
+        tilesSprites.update()
+        rects = tilesSprites.draw(screen)
 
         if thisGame.fruitScoreTimer > 0:
             if thisGame.modeTimer % 2 == 0:
                 thisGame.DrawNumber(2500, (
                     thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
 
-        player_group.update()
-        allsprites.update()
-        fruit_group.update()
-
-        player_group.draw(screen)
-        rects = allsprites.draw(screen)
-        fruit_group.draw(screen)
+        allSprites.update()
+        rects += allSprites.draw(screen)
 
         if thisGame.mode == 3:
             screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET))
@@ -1781,7 +1794,7 @@ while True:
 
     thisGame.DrawScore()
 
-    pg.display.flip()
-    #pg.display.update(rects)
+    #pg.display.flip()
+    pg.display.update(rects)
 
     clock.tick(60)
