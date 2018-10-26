@@ -1074,6 +1074,7 @@ class level:
         self.pelletColor = (255, 255, 255, 255)
 
         self.map = {}
+        self.mapSprite = {}
 
         self.pellets = 0
         self.powerPelletBlinkTimer = 0
@@ -1171,6 +1172,7 @@ class level:
                                         player.y += TILE_HEIGHT
                                     else:
                                         player.y -= TILE_HEIGHT
+
     @staticmethod
     def IsWall(row_col):
         (row, col) = row_col
@@ -1189,8 +1191,30 @@ class level:
         else:
             return False
 
+    def StringToTile(self, tileStr):
+        if tileStr == tileID['pellet-power']:
+            return tileIDImage[tileStr]
+        elif tileStr == tileID['showlogo']:
+            return thisGame.imLogo
+        elif tileStr == tileID['hiscores']:
+            return thisGame.imHiscores
+        else:
+            return tileIDImage[tileStr]
+
+    def SetMapTileSprite(self, row_col, newValue):
+        (row, col) = row_col
+        self.mapSprite[(row * self.lvlWidth) + col] = Tile(self.StringToTile(newValue))
+
+    def GetMapTileSprite(self, row_col):
+        (row, col) = row_col
+        if 0 <= row < self.lvlHeight and 0 <= col < self.lvlWidth:
+            return self.mapSprite[(row * self.lvlWidth) + col]
+        else:
+            return 0
+
     def SetMapTile(self, row_col, newValue):
         (row, col) = row_col
+        self.SetMapTileSprite(row_col, newValue)
         self.map[(row * self.lvlWidth) + col] = newValue
 
     def GetMapTile(self, row_col):
@@ -1273,6 +1297,8 @@ class level:
             print(outputLine)
         print("-" * 100)
 
+    def LoadMapToSprite(self):
+        pass
 
     def DrawMap(self):
         tilesSprites.empty()
@@ -1602,6 +1628,7 @@ path = path_finder()
 
 allSprites = pg.sprite.LayeredDirty((ghosts[0], ghosts[1], ghosts[2], ghosts[3], player, thisFruit))
 tilesSprites = pg.sprite.LayeredDirty()
+mapSprites = {}
 
 tileIDName = {}  # gives tile name (when the ID# is known)
 tileID = {}  # gives tile ID (when the name is known)
