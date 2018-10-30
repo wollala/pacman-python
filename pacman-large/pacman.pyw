@@ -3,6 +3,7 @@
 import os
 import random
 import sys
+import copy
 
 import pygame as pg
 from pygame.locals import *
@@ -1191,30 +1192,21 @@ class level:
         else:
             return False
 
-    def StringToTile(self, tileStr):
-        if tileStr == tileID['pellet-power']:
-            return tileIDImage[tileStr]
-        elif tileStr == tileID['showlogo']:
-            return thisGame.imLogo
-        elif tileStr == tileID['hiscores']:
-            return thisGame.imHiscores
+    def SetMapSpriteTile(self, key, newValue):
+        if newValue == 0:
+            self.mapSprite[key] = 0
         else:
-            return tileIDImage[tileStr]
-
-    def SetMapTileSprite(self, row_col, newValue):
-        (row, col) = row_col
-        self.mapSprite[(row * self.lvlWidth) + col] = Tile(self.StringToTile(newValue))
-
-    def GetMapTileSprite(self, row_col):
-        (row, col) = row_col
-        if 0 <= row < self.lvlHeight and 0 <= col < self.lvlWidth:
-            return self.mapSprite[(row * self.lvlWidth) + col]
-        else:
-            return 0
+            if newValue == tileID['pellet-power']:
+                self.mapSprite[key] = copy.deepcopy(tileIDImage[newValue])
+            if newValue == tileID['showlogo']:
+                self.mapSprite[key] = copy.deepcopy(Tile(thisGame.imLogo))
+            elif newValue == tileID['hiscores']:
+                self.mapSprite[key] = copy.deepcopy(Tile(thisGame.imHiscores))
+            else:
+                self.mapSprite[key] = copy.deepcopy(tileIDImage[newValue])
 
     def SetMapTile(self, row_col, newValue):
         (row, col) = row_col
-        self.SetMapTileSprite(row_col, newValue)
         self.map[(row * self.lvlWidth) + col] = newValue
 
     def GetMapTile(self, row_col):
@@ -1299,6 +1291,7 @@ class level:
 
     def LoadMapToSprite(self):
         pass
+        #TODO
 
     def DrawMap(self):
         tilesSprites.empty()
@@ -1318,7 +1311,7 @@ class level:
                     # if this isn't a blank tile
                     if useTile == tileID['pellet-power']:
                         if self.powerPelletBlinkTimer < 30:
-                            tile = Tile(tileIDImage[useTile])
+                            tile = tileIDImage[useTile]
                             tile.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
                             tile.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
                             tilesSprites.add(tile)
@@ -1339,7 +1332,7 @@ class level:
                         #screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     else:
-                        tile = Tile(tileIDImage[useTile])
+                        tile = tileIDImage[useTile]
                         tile.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
                         tile.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
                         tilesSprites.add(tile)
@@ -1446,6 +1439,7 @@ class level:
                             player.homeY = rowNum * TILE_HEIGHT
                             self.SetMapTile((rowNum, k), 0)
 
+
                         elif 10 <= thisID <= 13:
                             # one of the ghosts
 
@@ -1460,8 +1454,13 @@ class level:
 
                     rowNum += 1
         f.close()
+
         # reload all tiles and set appropriate colors
         GetCrossRef()
+
+        # set to mapSprite
+        for key, value in self.map.items():
+            self.SetMapSpriteTile(key, value)
 
         # load map into the pathfinder object
         path.ResizeMap((self.lvlHeight, self.lvlWidth))
@@ -1608,6 +1607,9 @@ def GetCrossRef():
 
         lineNum += 1
     f.close()
+
+    for key, value in tileIDImage.items():
+        tileIDImage[key] = Tile(value)
 
 #      __________________
 # ___/  main code block  \_____________________________________________________
