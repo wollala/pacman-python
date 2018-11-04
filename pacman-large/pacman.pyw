@@ -21,9 +21,9 @@ TILE_HEIGHT = 24
 # constants for the high-score display
 HS_FONT_SIZE = 14
 HS_LINE_HEIGHT = 16
-HS_WIDTH = 408
+HS_WIDTH = 300
 HS_HEIGHT = 120
-HS_XOFFSET = 48
+HS_XOFFSET = 0
 HS_YOFFSET = 384
 HS_ALPHA = 200
 
@@ -157,8 +157,16 @@ class game:
         self.imGameOver, self.rect_imGameOver = load_image(SCRIPT_PATH, "res", "text", "gameover.gif")
         self.imReady, self.rect_imReady = load_image(SCRIPT_PATH, "res", "text", "ready.gif")
         self.imLogo, self.rect_imLogo = load_image(SCRIPT_PATH, "res", "text", "logo.gif")
-        ##TODO
         self.imHiscores = self.makehiscorelist()
+
+        self.imLifeSprite = [Tile(self.imLife), Tile(self.imLife), Tile(self.imLife), Tile(self.imLife)]
+        self.imGameOverSprite =  Tile(self.imGameOver)
+        self.imGameOverSprite.visible = 0
+        self.imReadySprite = Tile(self.imReady)
+        self.imReadySprite.visible = 0
+        self.imHiscoresSprite = Tile(self.imHiscores)
+        self.imHiscoresSprite.visible = 0
+        self.imFruitSprite = None
 
     @staticmethod
     def defaulthiscorelist():
@@ -274,29 +282,52 @@ class game:
     def DrawScore(self):
         self.DrawNumber(self.score, (SCORE_XOFFSET, self.screenSize[1] - SCORE_YOFFSET))
 
-        for i in range(0, self.lives):
-            screen.blit(self.imLife, (34 + i * 10 + 16, self.screenSize[1] - 18))
+        scoreSprites.add((self.imLifeSprite[0],self.imLifeSprite[1],self.imLifeSprite[2], self.imGameOverSprite, self.imReadySprite))
+        for i in range(0, 3):
+            if i < self.lives:
+                self.imLifeSprite[i].rect.x = 34 + i * 10 + 16
+                self.imLifeSprite[i].rect.y = self.screenSize[1] - 18
+                self.imLifeSprite[i].dirty = 1
+            else:
+                if scoreSprites.has(self.imLifeSprite[i]):
+                    scoreSprites.remove(self.imLifeSprite[i])
+                    self.imLifeSprite[i].dirty = 1
 
-        screen.blit(thisFruit.imFruit[thisFruit.fruitType], (4 + 16, self.screenSize[1] - 28))
+        if not scoreSprites.has(self.imFruitSprite):
+            self.imFruitSprite = Tile(thisFruit.imFruit[thisFruit.fruitType])
+            scoreSprites.add(self.imFruitSprite)
+        else:
+            self.imFruitSprite.rect.x = 4 + 16
+            self.imFruitSprite.rect.y = self.screenSize[1] - 28
 
         if self.mode == 3:
-            screen.blit(self.imGameOver, (self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2),
-                                          self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2)))
+            self.imGameOverSprite.rect.x = self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2)
+            self.imGameOverSprite.rect.y = self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2)
+            self.imGameOverSprite.visible = 1
+            self.imGameOverSprite.dirty = 1
+
         elif self.mode == 0 or self.mode == 4:
-            screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12))
+            self.imReadySprite.rect.x = self.screenSize[0] / 2 - 20
+            self.imReadySprite.rect.y = self.screenSize[1] / 2 + 12
+            self.imReadySprite.visible = 1
+            self.imReadySprite.dirty = 1
+
+        else:
+            self.imGameOverSprite.visible = 0
+            self.imReadySprite.visible = 0
 
         self.DrawNumber(self.levelNum, (0, self.screenSize[1] - 20))
 
     def DrawNumber(self, number, x_y):
-        (x, y) = x_y
-
-        strNumber = str(number)
-
-        for i in range(0, len(str(number))):
-            if strNumber[i] == '.':
-                break
-            iDigit = int(strNumber[i])
-            screen.blit(self.digit[iDigit], (x + i * SCORE_COLWIDTH, y))
+        pass
+        # (x, y) = x_y
+        #
+        # strNumber = str(number)
+        # for i in range(0, len(str(number))):
+        #     if strNumber[i] == '.':
+        #         break
+        #     iDigit = int(strNumber[i])
+        #     screen.blit(self.digit[iDigit], (x + i * SCORE_COLWIDTH, y))
 
     def SmartMoveScreen(self):
         possibleScreenX = player.x - self.screenTileSize[1] / 2 * TILE_WIDTH
@@ -1328,6 +1359,8 @@ class level:
                             useTileSpirte.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
                             useTileSpirte.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
                             tilesSprites.add(useTileSpirte)
+                        else:
+                            useTileSpirte.dirty = 1
 
 
     def LoadLevel(self, levelNum):
@@ -1619,6 +1652,7 @@ thisFruit = fruit()
 path = path_finder()
 
 allSprites = pg.sprite.LayeredDirty((ghosts[0], ghosts[1], ghosts[2], ghosts[3], player, thisFruit))
+scoreSprites = pg.sprite.LayeredDirty()
 tilesSprites = pg.sprite.LayeredDirty()
 mapSprites = {}
 
@@ -1667,6 +1701,9 @@ while True:
         # ready to level start
         thisGame.modeTimer += 1
 
+        thisGame.imHiscoresSprite.visible = 0
+        thisGame.imHiscoresSprite.dirty = 1
+
         if thisGame.modeTimer == 238:
             thisGame.SetMode(1)
 
@@ -1696,6 +1733,12 @@ while True:
                 thisGame.SetMode(4)
 
     elif thisGame.mode == 3:
+        if not scoreSprites.has(thisGame.imHiscoresSprite):
+            scoreSprites.add(thisGame.imHiscoresSprite)
+        thisGame.imHiscoresSprite.rect.x = HS_XOFFSET
+        thisGame.imHiscoresSprite.rect.y = HS_YOFFSET
+        thisGame.imHiscoresSprite.visible = 1
+        thisGame.imHiscoresSprite.dirty = 1
         # game over
         CheckInputs()
 
@@ -1794,25 +1837,22 @@ while True:
 
     if not thisGame.mode == 10:
         rects = tilesSprites.draw(screen)
-
-        if thisGame.fruitScoreTimer > 0:
-            if thisGame.modeTimer % 2 == 0:
-                thisGame.DrawNumber(2500, (
-                    thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
+        # SKIP DRAW NUMBER
+        # if thisGame.fruitScoreTimer > 0:
+        #     if thisGame.modeTimer % 2 == 0:
+        #         thisGame.DrawNumber(2500, (
+        #             thisFruit.x - thisGame.screenPixelPos[0] - 16, thisFruit.y - thisGame.screenPixelPos[1] + 4))
 
         allSprites.update()
         rects += allSprites.draw(screen)
-
-        if thisGame.mode == 3:
-            screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET))
 
     if thisGame.mode == 5:
         thisGame.DrawNumber(thisGame.ghostValue / 2,
                             (player.x - thisGame.screenPixelPos[0] - 4, player.y - thisGame.screenPixelPos[1] + 6))
 
     thisGame.DrawScore()
+    rects += scoreSprites.draw(screen)
 
-    #pg.display.flip()
     pg.display.update(rects)
 
     clock.tick(60)
