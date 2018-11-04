@@ -1197,13 +1197,20 @@ class level:
             self.mapSprite[key] = 0
         else:
             if newValue == tileID['pellet-power']:
-                self.mapSprite[key] = copy.deepcopy(tileIDImage[newValue])
+                self.mapSprite[key] = Tile(tileIDImage[newValue])
             if newValue == tileID['showlogo']:
-                self.mapSprite[key] = copy.deepcopy(Tile(thisGame.imLogo))
+                self.mapSprite[key] = Tile(thisGame.imLogo)
             elif newValue == tileID['hiscores']:
-                self.mapSprite[key] = copy.deepcopy(Tile(thisGame.imHiscores))
+                self.mapSprite[key] = Tile(thisGame.imHiscores)
             else:
-                self.mapSprite[key] = copy.deepcopy(tileIDImage[newValue])
+                self.mapSprite[key] = Tile(tileIDImage[newValue])
+
+    def GetMapSpriteTile(self, row_col):
+        (row, col) = row_col
+        if 0 <= row < self.lvlHeight and 0 <= col < self.lvlWidth:
+            return self.mapSprite[(row * self.lvlWidth) + col]
+        else:
+            return 0
 
     def SetMapTile(self, row_col, newValue):
         (row, col) = row_col
@@ -1289,12 +1296,7 @@ class level:
             print(outputLine)
         print("-" * 100)
 
-    def LoadMapToSprite(self):
-        pass
-        #TODO
-
     def DrawMap(self):
-        tilesSprites.empty()
         self.powerPelletBlinkTimer += 1
         if self.powerPelletBlinkTimer == 60:
             self.powerPelletBlinkTimer = 0
@@ -1307,36 +1309,26 @@ class level:
                 actualCol = thisGame.screenNearestTilePos[1] + col
 
                 useTile = self.GetMapTile((actualRow, actualCol))
+                useTileSpirte = self.GetMapSpriteTile((actualRow, actualCol))
                 if useTile != 0 and useTile != tileID['door-h'] and useTile != tileID['door-v']:
                     # if this isn't a blank tile
                     if useTile == tileID['pellet-power']:
                         if self.powerPelletBlinkTimer < 30:
-                            tile = tileIDImage[useTile]
-                            tile.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
-                            tile.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
-                            tilesSprites.add(tile)
-                            #screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
-
-                    elif useTile == tileID['showlogo']:
-                        tile = Tile(thisGame.imLogo)
-                        tile.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
-                        tile.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
-                        tilesSprites.add(tile)
-                        #screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
-
-                    elif useTile == tileID['hiscores']:
-                        tile = Tile(thisGame.imHiscores)
-                        tile.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
-                        tile.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
-                        tilesSprites.add(tile)
-                        #screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                            useTileSpirte.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
+                            useTileSpirte.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
+                            if tilesSprites.has(useTileSpirte):
+                                useTileSpirte.dirty = 1
+                            else:
+                                tilesSprites.add(useTileSpirte)
+                        else:
+                            tilesSprites.remove(useTileSpirte)
 
                     else:
-                        tile = tileIDImage[useTile]
-                        tile.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
-                        tile.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
-                        tilesSprites.add(tile)
-                        #screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0], row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
+                        if not tilesSprites.has(useTileSpirte):
+                            useTileSpirte.rect.x = col * TILE_WIDTH - thisGame.screenPixelOffset[0]
+                            useTileSpirte.rect.y = row * TILE_HEIGHT - thisGame.screenPixelOffset[1]
+                            tilesSprites.add(useTileSpirte)
+
 
     def LoadLevel(self, levelNum):
         self.map = {}
@@ -1508,6 +1500,7 @@ class level:
 
         player.anim_pacmanCurrent = player.anim_pacmanS
         player.animFrame = 3
+        tilesSprites.empty()
 ################################ level class end ################################
 
 
@@ -1607,9 +1600,6 @@ def GetCrossRef():
 
         lineNum += 1
     f.close()
-
-    for key, value in tileIDImage.items():
-        tileIDImage[key] = Tile(value)
 
 #      __________________
 # ___/  main code block  \_____________________________________________________
