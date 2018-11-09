@@ -579,7 +579,7 @@ class ghost:
         self.y = 0
         self.velX = 0
         self.velY = 0
-        self.speed = 1
+        self.speed = 2
 
         self.nearestRow = 0
         self.nearestCol = 0
@@ -867,7 +867,7 @@ class pacman:
         self.y = 0
         self.velX = 0
         self.velY = 0
-        self.speed = 2
+        self.speed = 3
 
         self.nearestRow = 0
         self.nearestCol = 0
@@ -1394,7 +1394,7 @@ class level:
             ghosts[i].velX = 0
             ghosts[i].velY = 0
             ghosts[i].state = 1
-            ghosts[i].speed = 1
+            ghosts[i].speed = 2
             ghosts[i].Move()
 
             # give each ghost a path to a random spot (containing a pellet)
@@ -1728,6 +1728,6 @@ while True:
 
     thisGame.DrawScore()
 
-    pygame.display.update(rect_list)
+    pygame.display.update()
     del rect_list[:]
-    clock.tick(60)
+    clock.tick(40)
