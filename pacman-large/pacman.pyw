@@ -48,6 +48,14 @@ JS_XAXIS = 0  # axis 0 for left/right (default for most joysticks)
 JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
+
+def get_image_surface(file_path):
+    image = pygame.image.load(file_path).convert()
+    image_rect = image.get_rect()
+    image_surface = pygame.Surface((image_rect.width, image_rect.height))
+    image_surface.blit(image, image_rect)
+    return image_surface
+
 # Must come before pygame.init()
 pygame.mixer.pre_init(22050, -16, 1, 1024)
 pygame.mixer.init()
@@ -62,7 +70,7 @@ pygame.display.set_caption("Pacman")
 
 screen = pygame.display.get_surface()
 
-img_Background = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif")).convert()
+img_Background = get_image_surface(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif"))
 
 snd_pellet = {
     0: pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "pellet1.wav")),
@@ -119,12 +127,12 @@ class game:
         # numerical display digits
         self.digit = {}
         for i in range(0, 10, 1):
-            self.digit[i] = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif")).convert()
-        self.imLife = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "life.gif")).convert()
-        self.imGameOver = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif")).convert()
-        self.imReady = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif")).convert()
-        self.imLogo = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif")).convert()
-        self.imHiscores = self.makehiscorelist()
+            self.digit[i]   = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif"))
+        self.imLife         = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "life.gif"))
+        self.imGameOver     = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif"))
+        self.imReady        = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif"))
+        self.imLogo         = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif"))
+        self.imHiscores     = self.makehiscorelist()
 
     @staticmethod
     def defaulthiscorelist():
@@ -591,8 +599,8 @@ class ghost:
 
         self.anim = {}
         for i in range(1, 7, 1):
-            self.anim[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "ghost " + str(i) + ".gif")).convert()
+            self.anim[i] = get_image_surface(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "ghost " + str(i) + ".gif"))
 
             # change the ghost color in this frame
             for y in range(0, TILE_HEIGHT, 1):
@@ -763,8 +771,8 @@ class fruit:
 
         self.imFruit = {}
         for i in range(0, 5, 1):
-            self.imFruit[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "fruit " + str(i) + ".gif")).convert()
+            self.imFruit[i] = get_image_surface(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "fruit " + str(i) + ".gif"))
 
         self.currentPath = ""
         self.fruitType = 1
@@ -877,15 +885,15 @@ class pacman:
         self.animFrame = 1
 
         for i in range(1, 9, 1):
-            self.anim_pacmanL[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif")).convert()
-            self.anim_pacmanR[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif")).convert()
-            self.anim_pacmanU[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif")).convert()
-            self.anim_pacmanD[i] = pygame.image.load(
-                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-d " + str(i) + ".gif")).convert()
-            self.anim_pacmanS[i] = pygame.image.load(os.path.join(SCRIPT_PATH, "res", "sprite", "pacman.gif")).convert()
+            self.anim_pacmanL[i] = get_image_surface(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-l " + str(i) + ".gif"))
+            self.anim_pacmanR[i] = get_image_surface(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-r " + str(i) + ".gif"))
+            self.anim_pacmanU[i] = get_image_surface(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-u " + str(i) + ".gif"))
+            self.anim_pacmanD[i] = get_image_surface(
+                os.path.join(SCRIPT_PATH, "res", "sprite", "pacman-d " + str(i) + ".gif"))
+            self.anim_pacmanS[i] = get_image_surface(os.path.join(SCRIPT_PATH, "res", "sprite", "pacman.gif"))
 
         self.pelletSndNum = 0
 
@@ -1483,8 +1491,8 @@ def GetCrossRef():
 
             thisID = int(str_splitBySpace[0])
             if not thisID in NO_GIF_TILES:
-                tileIDImage[thisID] = pygame.image.load(
-                    os.path.join(SCRIPT_PATH, "res", "tiles", str_splitBySpace[1] + ".gif")).convert()
+                tileIDImage[thisID] = get_image_surface(
+                    os.path.join(SCRIPT_PATH, "res", "tiles", str_splitBySpace[1] + ".gif"))
             else:
                 tileIDImage[thisID] = pygame.Surface((TILE_WIDTH, TILE_HEIGHT))
 
