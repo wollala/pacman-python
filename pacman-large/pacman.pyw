@@ -48,13 +48,12 @@ JS_XAXIS = 0  # axis 0 for left/right (default for most joysticks)
 JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
-
 def get_image_surface(file_path):
     image = pygame.image.load(file_path).convert()
-    image_rect = image.get_rect()
-    image_surface = pygame.Surface((image_rect.width, image_rect.height))
-    image_surface.blit(image, image_rect)
-    return image_surface
+    # image_rect = image.get_rect()
+    # image_surface = pygame.Surface((image_rect.width, image_rect.height))
+    # image_surface.blit(image, image_rect)
+    return image
 
 # Must come before pygame.init()
 pygame.mixer.pre_init(22050, -16, 1, 1024)
@@ -215,13 +214,13 @@ class game:
         scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
         scoresurf.set_alpha(HS_ALPHA)
         linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
-        rect_list.append(scoresurf.blit(linesurf, (0, 0)))
+        scoresurf.blit(linesurf, (0, 0))
         hs = self.gethiscores()
         vpos = 0
         for line in hs:
             vpos += HS_LINE_HEIGHT
             linesurf = f.render(line[1].rjust(22) + str(line[0]).rjust(9), 1, (255, 255, 255))
-            rect_list.append(scoresurf.blit(linesurf, (0, vpos)))
+            scoresurf.blit(linesurf, (0, vpos))
         return scoresurf
 
     def drawmidgamehiscores(self):
@@ -251,15 +250,15 @@ class game:
         self.DrawNumber(self.score, (SCORE_XOFFSET, self.screenSize[1] - SCORE_YOFFSET))
 
         for i in range(0, self.lives, 1):
-            rect_list.append(screen.blit(self.imLife, (34 + i * 10 + 16, self.screenSize[1] - 18)))
+            screen.blit(self.imLife, (34 + i * 10 + 16, self.screenSize[1] - 18))
 
-        rect_list.append(screen.blit(thisFruit.imFruit[thisFruit.fruitType], (4 + 16, self.screenSize[1] - 28)))
+        screen.blit(thisFruit.imFruit[thisFruit.fruitType], (4 + 16, self.screenSize[1] - 28))
 
         if self.mode == 3:
-            rect_list.append(screen.blit(self.imGameOver, (self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2),
-                                          self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2))))
+            screen.blit(self.imGameOver, (self.screenSize[0] / 2 - (self.imGameOver.get_width() / 2),
+                                          self.screenSize[1] / 2 - (self.imGameOver.get_height() / 2)))
         elif self.mode == 0 or self.mode == 4:
-            rect_list.append(screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12)))
+            screen.blit(self.imReady, (self.screenSize[0] / 2 - 20, self.screenSize[1] / 2 + 12))
 
         self.DrawNumber(self.levelNum, (0, self.screenSize[1] - 20))
 
@@ -273,7 +272,7 @@ class game:
             if strNumber[i] == '.':
                 break
             iDigit = int(strNumber[i])
-            rect_list.append(screen.blit(self.digit[iDigit], (x + i * SCORE_COLWIDTH, y)))
+            screen.blit(self.digit[iDigit], (x + i * SCORE_COLWIDTH, y))
 
     def SmartMoveScreen(self):
         possibleScreenX = player.x - self.screenTileSize[1] / 2 * TILE_WIDTH
@@ -570,7 +569,7 @@ class path_finder:
         for row in range(0, self.size[0], 1):
             for col in range(0, self.size[1], 1):
                 thisTile = self.GetType((row, col))
-                rect_list.append(screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2))))
+                screen.blit(tileIDImage[thisTile], (col * (TILE_WIDTH * 2), row * (TILE_WIDTH * 2)))
 
 
 class ghost:
@@ -649,29 +648,29 @@ class ghost:
 
         if self.state == 1:
             # draw regular ghost (this one)
-            rect_list.append(screen.blit(self.anim[self.animFrame],
-                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
+            screen.blit(self.anim[self.animFrame],
+                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
         elif self.state == 2:
             # draw vulnerable ghost
 
             if thisGame.ghostTimer > 100:
                 # blue
-                rect_list.append(screen.blit(ghosts[4].anim[self.animFrame],
-                            (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
+                screen.blit(ghosts[4].anim[self.animFrame],
+                            (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
             else:
                 # blue/white flashing
                 tempTimerI = int(thisGame.ghostTimer / 10)
                 if tempTimerI == 1 or tempTimerI == 3 or tempTimerI == 5 or tempTimerI == 7 or tempTimerI == 9:
-                    rect_list.append(screen.blit(ghosts[5].anim[self.animFrame],
-                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
+                    screen.blit(ghosts[5].anim[self.animFrame],
+                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
                 else:
-                    rect_list.append(screen.blit(ghosts[4].anim[self.animFrame],
-                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
+                    screen.blit(ghosts[4].anim[self.animFrame],
+                                (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
 
         elif self.state == 3:
             # draw glasses
-            rect_list.append(screen.blit(tileIDImage[tileID['glasses']],
-                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
+            screen.blit(tileIDImage[tileID['glasses']],
+                        (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
 
         if thisGame.mode == 6 or thisGame.mode == 7:
             # don't animate ghost if the level is complete
@@ -699,7 +698,7 @@ class ghost:
             # if the ghost is lined up with the grid again
             # meaning, it's time to go to the next path item
 
-            if len(self.currentPath) > 0:
+            if self.currentPath is not False and (len(self.currentPath) > 0):
                 self.currentPath = self.currentPath[1:]
                 self.FollowNextPathWay()
 
@@ -782,8 +781,8 @@ class fruit:
         if thisGame.mode == 3 or self.active == False:
             return False
 
-        rect_list.append(screen.blit(self.imFruit[self.fruitType],
-                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1] - self.bounceY)))
+        screen.blit(self.imFruit[self.fruitType],
+                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1] - self.bounceY))
 
     def Move(self):
         if not self.active:
@@ -945,7 +944,7 @@ class pacman:
                     thisGame.AddToScore(2500)
                     thisFruit.active = False
                     thisGame.fruitTimer = 0
-                    thisGame.fruitScoreTimer = 120
+                    thisGame.fruitScoreTimer = 80
                     snd_eatfruit.play()
 
         else:
@@ -966,7 +965,7 @@ class pacman:
 
         # deal with fruit timer
         thisGame.fruitTimer += 1
-        if thisGame.fruitTimer == 500:
+        if thisGame.fruitTimer == 380:
             pathwayPair = thisLevel.GetPathwayPairPos()
 
             if not pathwayPair == False:
@@ -1002,8 +1001,8 @@ class pacman:
         elif self.velY < 0:
             self.anim_pacmanCurrent = self.anim_pacmanU
 
-        rect_list.append(screen.blit(self.anim_pacmanCurrent[self.animFrame],
-                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1])))
+        screen.blit(self.anim_pacmanCurrent[self.animFrame],
+                    (self.x - thisGame.screenPixelPos[0], self.y - thisGame.screenPixelPos[1]))
 
         if thisGame.mode == 1 or thisGame.mode == 8 or thisGame.mode == 9:
             if self.velX != 0 or self.velY != 0:
@@ -1225,7 +1224,7 @@ class level:
     def DrawMap(self):
         global rect_list
         self.powerPelletBlinkTimer += 1
-        if self.powerPelletBlinkTimer == 60:
+        if self.powerPelletBlinkTimer == 40:
             self.powerPelletBlinkTimer = 0
 
         for row in range(-1, thisGame.screenTileSize[0] + 1, 1):
@@ -1239,21 +1238,21 @@ class level:
                 if useTile != 0 and useTile != tileID['door-h'] and useTile != tileID['door-v']:
                     # if this isn't a blank tile
                     if useTile == tileID['pellet-power']:
-                        if self.powerPelletBlinkTimer < 30:
-                            rect_list.append(screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                               row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
+                        if self.powerPelletBlinkTimer < 20:
+                            screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                               row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     elif useTile == tileID['showlogo']:
-                        rect_list.append(screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                      row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
+                        screen.blit(thisGame.imLogo, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                      row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     elif useTile == tileID['hiscores']:
-                        rect_list.append(screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                          row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
+                        screen.blit(thisGame.imHiscores, (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                          row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
                     else:
-                        rect_list.append(screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
-                                                           row * TILE_HEIGHT - thisGame.screenPixelOffset[1])))
+                        screen.blit(tileIDImage[useTile], (col * TILE_WIDTH - thisGame.screenPixelOffset[0],
+                                                           row * TILE_HEIGHT - thisGame.screenPixelOffset[1]))
 
     def LoadLevel(self, levelNum):
         self.map = {}
@@ -1581,7 +1580,7 @@ while True:
         # ready to level start
         thisGame.modeTimer += 1
 
-        if thisGame.modeTimer == 238:
+        if thisGame.modeTimer == 150:
             thisGame.SetMode(1)
 
     if thisGame.mode == 1:
@@ -1598,7 +1597,7 @@ while True:
         # waiting after getting hit by a ghost
         thisGame.modeTimer += 1
 
-        if thisGame.modeTimer == 90:
+        if thisGame.modeTimer == 60:
             thisLevel.Restart()
 
             thisGame.lives -= 1
@@ -1617,7 +1616,7 @@ while True:
         # waiting to start
         thisGame.modeTimer += 1
 
-        if thisGame.modeTimer == 90:
+        if thisGame.modeTimer == 60:
             thisGame.SetMode(1)
             player.velX = player.speed
 
@@ -1625,14 +1624,14 @@ while True:
         # brief pause after munching a vulnerable ghost
         thisGame.modeTimer += 1
 
-        if thisGame.modeTimer == 30:
+        if thisGame.modeTimer == 20:
             thisGame.SetMode(8)
 
     elif thisGame.mode == 6:
         # pause after eating all the pellets
         thisGame.modeTimer += 1
 
-        if thisGame.modeTimer == 60:
+        if thisGame.modeTimer == 40:
             thisGame.SetMode(7)
             oldEdgeLightColor = thisLevel.edgeLightColor
             oldEdgeShadowColor = thisLevel.edgeShadowColor
@@ -1657,7 +1656,7 @@ while True:
             thisLevel.edgeShadowColor = oldEdgeShadowColor
             thisLevel.fillColor = oldFillColor
             GetCrossRef()
-        elif thisGame.modeTimer == 150:
+        elif thisGame.modeTimer == 100:
             thisGame.SetMode(10)
 
     elif thisGame.mode == 8:
@@ -1704,7 +1703,7 @@ while True:
 
     thisGame.SmartMoveScreen()
 
-    rect_list.append(screen.blit(img_Background, (0, 0)))
+    screen.blit(img_Background, (0, 0))
 
     if not thisGame.mode == 10:
         thisLevel.DrawMap()
@@ -1720,7 +1719,7 @@ while True:
         player.Draw()
 
         if thisGame.mode == 3:
-            rect_list.append(screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET)))
+            screen.blit(thisGame.imHiscores, (HS_XOFFSET, HS_YOFFSET))
 
     if thisGame.mode == 5:
         thisGame.DrawNumber(thisGame.ghostValue / 2,
