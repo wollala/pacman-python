@@ -689,6 +689,8 @@ class ghost:
             self.animDelay = 0
 
     def Move(self):
+        if (thisGame.levelNum == 2):
+            return
         self.x += self.velX
         self.y += self.velY
 
@@ -933,7 +935,7 @@ class pacman:
                         ghosts[i].x = ghosts[i].nearestCol * TILE_WIDTH
                         ghosts[i].y = ghosts[i].nearestRow * TILE_HEIGHT
                         ghosts[i].currentPath = path.FindPath((ghosts[i].nearestRow, ghosts[i].nearestCol), (
-                            thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
+                                thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
                         ghosts[i].FollowNextPathWay()
 
                         # set game mode to brief pause after eating
