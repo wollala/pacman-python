@@ -68,6 +68,7 @@ window = pygame.display.set_mode((1, 1))
 pygame.display.set_caption("Pacman")
 
 screen = pygame.display.get_surface()
+pygame.mouse.set_visible(False)
 
 img_Background = get_image_surface(os.path.join(SCRIPT_PATH, "res", "backgrounds", "1.gif"))
 
