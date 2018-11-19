@@ -16,12 +16,12 @@ SCREEN_TILE_SIZE_WIDTH = 30
 TILE_WIDTH = TILE_HEIGHT = 24
 
 # constants for the high-score display
-HS_FONT_SIZE = 14
+HS_FONT_SIZE = 16
 HS_LINE_HEIGHT = 16
 HS_WIDTH = 408
 HS_HEIGHT = 120
-HS_XOFFSET = 48
-HS_YOFFSET = 384
+HS_XOFFSET = 180
+HS_YOFFSET = 400
 HS_ALPHA = 200
 
 # new constants for the score's position
@@ -211,16 +211,16 @@ class game:
         global rect_list
         "Read the High-Score file and convert it to a useable Surface."
         # My apologies for all the hard-coded constants.... -Andy
-        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "VeraMoBd.ttf"), HS_FONT_SIZE)
+        f = pygame.font.Font(os.path.join(SCRIPT_PATH, "res", "zig_____.ttf"), HS_FONT_SIZE)
         scoresurf = pygame.Surface((HS_WIDTH, HS_HEIGHT), pygame.SRCALPHA)
         scoresurf.set_alpha(HS_ALPHA)
-        linesurf = f.render(" " * 18 + "HIGH SCORES", 1, (255, 255, 0))
+        linesurf = f.render("HIGH SCORES".center(28), 1, (255, 255, 0))
         scoresurf.blit(linesurf, (0, 0))
         hs = self.gethiscores()
         vpos = 0
         for line in hs:
             vpos += HS_LINE_HEIGHT
-            linesurf = f.render(line[1].rjust(22) + str(line[0]).rjust(9), 1, (255, 255, 255))
+            linesurf = f.render(line[1].ljust(18) + str(line[0]).rjust(10), 1, (255, 255, 255))
             scoresurf.blit(linesurf, (0, vpos))
         return scoresurf
 
@@ -1389,6 +1389,9 @@ class level:
         self.Restart()
 
     def Restart(self):
+        if thisGame.levelNum == 2:
+            player.speed = 4
+
         for i in range(0, 4, 1):
             # move ghosts back to home
             ghosts[i].x = ghosts[i].homeX
