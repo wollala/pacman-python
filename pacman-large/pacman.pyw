@@ -48,12 +48,14 @@ JS_XAXIS = 0  # axis 0 for left/right (default for most joysticks)
 JS_YAXIS = 1  # axis 1 for up/down (default for most joysticks)
 JS_STARTBUTTON = 0  # button number to start the game. this is a matter of personal preference, and will vary from device to device
 
+
 def get_image_surface(file_path):
     image = pygame.image.load(file_path).convert()
     # image_rect = image.get_rect()
     # image_surface = pygame.Surface((image_rect.width, image_rect.height))
     # image_surface.blit(image, image_rect)
     return image
+
 
 # Must come before pygame.init()
 pygame.mixer.pre_init(22050, -16, 1, 1024)
@@ -94,7 +96,8 @@ ghostcolor = {
     4: (50, 50, 255, 255),
     5: (255, 255, 255, 255)}
 
-rect_list = [] # rect list for drawing
+rect_list = []  # rect list for drawing
+
 
 #      ___________________
 # ___/  class definitions  \_______________________________________________
@@ -127,12 +130,12 @@ class game:
         # numerical display digits
         self.digit = {}
         for i in range(0, 10, 1):
-            self.digit[i]   = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif"))
-        self.imLife         = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "life.gif"))
-        self.imGameOver     = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif"))
-        self.imReady        = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif"))
-        self.imLogo         = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif"))
-        self.imHiscores     = self.makehiscorelist()
+            self.digit[i] = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", str(i) + ".gif"))
+        self.imLife = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "life.gif"))
+        self.imGameOver = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "gameover.gif"))
+        self.imReady = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "ready.gif"))
+        self.imLogo = get_image_surface(os.path.join(SCRIPT_PATH, "res", "text", "logo.gif"))
+        self.imHiscores = self.makehiscorelist()
 
     @staticmethod
     def defaulthiscorelist():
@@ -299,9 +302,9 @@ class game:
         (newX, newY) = newX_newY
         self.screenPixelPos = (newX, newY)
         self.screenNearestTilePos = (
-        int(newY / TILE_HEIGHT), int(newX / TILE_WIDTH))  # nearest-tile position of the screen from the UL corner
+            int(newY / TILE_HEIGHT), int(newX / TILE_WIDTH))  # nearest-tile position of the screen from the UL corner
         self.screenPixelOffset = (
-        newX - self.screenNearestTilePos[1] * TILE_WIDTH, newY - self.screenNearestTilePos[0] * TILE_HEIGHT)
+            newX - self.screenNearestTilePos[1] * TILE_WIDTH, newY - self.screenNearestTilePos[0] * TILE_HEIGHT)
 
     def GetScreenPos(self):
         return self.screenPixelPos
@@ -335,6 +338,7 @@ class game:
             self.PlayBackgoundSound(snd_extrapac)
         else:
             channel_backgound.stop()
+
 
 class node:
     def __init__(self):
@@ -935,7 +939,7 @@ class pacman:
                         ghosts[i].x = ghosts[i].nearestCol * TILE_WIDTH
                         ghosts[i].y = ghosts[i].nearestRow * TILE_HEIGHT
                         ghosts[i].currentPath = path.FindPath((ghosts[i].nearestRow, ghosts[i].nearestCol), (
-                                thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
+                            thisLevel.GetGhostBoxPos()[0] + 1, thisLevel.GetGhostBoxPos()[1]))
                         ghosts[i].FollowNextPathWay()
 
                         # set game mode to brief pause after eating
@@ -1175,6 +1179,9 @@ class level:
                                         player.y += TILE_HEIGHT
                                     else:
                                         player.y -= TILE_HEIGHT
+
+                    elif result == tileID['heart']:
+                        thisGame.SetMode(11)
 
     def GetGhostBoxPos(self):
         for row in range(0, self.lvlHeight, 1):
@@ -1524,6 +1531,7 @@ def GetCrossRef():
         lineNum += 1
     f.close()
 
+
 #      __________________
 # ___/  main code block  \_____________________________________________________
 
@@ -1554,7 +1562,7 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-#window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
+# window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
 window = pygame.display.set_mode(thisGame.screenSize)
 
 # initialise the joystick
@@ -1706,6 +1714,28 @@ while True:
         thisGame.modeTimer += 1
         if thisGame.modeTimer == 10:
             thisGame.SetNextLevel()
+
+    elif thisGame.mode == 11:
+        # flashing maze after finishing level
+        thisGame.modeTimer += 1
+
+        whiteSet = [10, 30, 50, 70]
+        normalSet = [20, 40, 60, 80]
+
+        if not whiteSet.count(thisGame.modeTimer) == 0:
+            # member of white set
+            thisLevel.edgeLightColor = (255, 255, 254, 255)
+            thisLevel.edgeShadowColor = (255, 255, 254, 255)
+            thisLevel.fillColor = (0, 0, 0, 255)
+            GetCrossRef()
+        elif not normalSet.count(thisGame.modeTimer) == 0:
+            # member of normal set
+            thisLevel.edgeLightColor = oldEdgeLightColor
+            thisLevel.edgeShadowColor = oldEdgeShadowColor
+            thisLevel.fillColor = oldFillColor
+            GetCrossRef()
+        elif thisGame.modeTimer == 100:
+            thisGame.modeTimer = 1
 
     thisGame.SmartMoveScreen()
 
