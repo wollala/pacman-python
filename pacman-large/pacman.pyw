@@ -87,6 +87,7 @@ snd_eatgh = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatgh
 snd_fruitbounce = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "fruitbounce.wav"))
 snd_eatfruit = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "eatfruit.wav"))
 snd_extralife = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "extralife.wav"))
+snd_love = pygame.mixer.Sound(os.path.join(SCRIPT_PATH, "res", "sounds", "All You Need Is Love.wav"))
 
 ghostcolor = {
     0: (255, 0, 0, 255),
@@ -336,6 +337,8 @@ class game:
             self.PlayBackgoundSound(snd_gh2gohome)
         elif newMode == 9:
             self.PlayBackgoundSound(snd_extrapac)
+        elif newMode == 11:
+            self.PlayBackgoundSound(snd_love)
         else:
             channel_backgound.stop()
 
