@@ -1468,7 +1468,7 @@ def CheckInputs():
                 player.velX = 0
                 player.velY = -player.speed
 
-    if pygame.key.get_pressed()[pygame.K_ESCAPE] or pygame.key.get_pressed()[pygame.K_RSHIFT] :
+    if pygame.key.get_pressed()[pygame.K_ESCAPE] or (js is not None and js.get_button(7)) :
         sys.exit(0)
 
     elif thisGame.mode == 3:
