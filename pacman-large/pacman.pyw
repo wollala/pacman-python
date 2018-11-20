@@ -1565,8 +1565,8 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-# window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
-window = pygame.display.set_mode(thisGame.screenSize)
+window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN | pygame.DOUBLEBUF)
+# window = pygame.display.set_mode(thisGame.screenSize)
 
 # initialise the joystick
 if pygame.joystick.get_count() > 0:
