@@ -1468,7 +1468,7 @@ def CheckInputs():
                 player.velX = 0
                 player.velY = -player.speed
 
-    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+    if pygame.key.get_pressed()[pygame.K_ESCAPE] or pygame.key.get_pressed()[pygame.K_RSHIFT] :
         sys.exit(0)
 
     elif thisGame.mode == 3:
@@ -1565,8 +1565,8 @@ thisGame = game()
 thisLevel = level()
 thisLevel.LoadLevel(thisGame.GetLevelNum())
 
-window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
-# window = pygame.display.set_mode(thisGame.screenSize)
+#window = pygame.display.set_mode(thisGame.screenSize, pygame.FULLSCREEN)
+window = pygame.display.set_mode(thisGame.screenSize)
 
 # initialise the joystick
 if pygame.joystick.get_count() > 0:
@@ -1768,4 +1768,5 @@ while True:
 
     pygame.display.update()
     del rect_list[:]
+
     clock.tick(40)
