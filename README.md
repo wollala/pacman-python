@@ -1,12 +1,3 @@
-Pacman by David Reilly
-======================
-With contributions by Andy Sommerville (2007)
-
-Github project page:
-https://github.com/greyblue9/pacman-python
-
-Personal project page:
-http://pinproject.com/pacman/pacman.htm
 
 ![Screenshot - 16x16 tile version](/screenshot-1.png)
 
