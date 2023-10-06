@@ -8,7 +8,10 @@ import pygame
 from pygame.locals import *
 
 # WIN???
-SCRIPT_PATH = sys.path[0]
+if os.name == "nt":
+    SCRIPT_PATH = os.getcwd()
+else:
+    SCRIPT_PATH = sys.path[0]    
 
 SCREEN_TILE_SIZE_HEIGHT = 23
 SCREEN_TILE_SIZE_WIDTH = 30
